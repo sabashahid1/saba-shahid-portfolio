@@ -164,8 +164,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileSidebarToggle = document.getElementById("mobile-sidebar-toggle");
   const sidebarPanel = document.getElementById("sidebar-panel");
   if (mobileSidebarToggle && sidebarPanel) {
-    mobileSidebarToggle.addEventListener("click", () => {
+    mobileSidebarToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
       sidebarPanel.classList.toggle("open");
+    });
+
+    // Close mobile sidebar when clicking outside
+    document.addEventListener("click", (e) => {
+      if (sidebarPanel.classList.contains("open")) {
+        if (!sidebarPanel.contains(e.target) && e.target !== mobileSidebarToggle) {
+          sidebarPanel.classList.remove("open");
+        }
+      }
     });
   }
 
