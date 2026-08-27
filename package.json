@@ -1,0 +1,19 @@
+{
+  "name": "saba-shahid-portfolio",
+  "version": "1.0.0",
+  "description": "Premium personal portfolio for SEO, WordPress and SMM specialist.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.2.0",
+    "nodemailer": "^6.9.14",
+    "@vercel/blob": "^0.23.4",
+    "mongodb": "^6.8.0",
+    "pg": "^8.12.0"
+  }
+}

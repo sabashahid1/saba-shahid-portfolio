@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Saba Shahid - Professional portfolio website specializing in SEO, WordPress Development, and Social Media Marketing. Driving organic growth and premium web experiences.">
+  <meta name="author" content="Saba Shahid">
+  
+  <title>Saba Shahid | SEO, WordPress & Social Media Marketing Specialist</title>
+  
+  <!-- Favicon placeholder (CSS styling handles fallbacks) -->
+  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  
+  <!-- Premium Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Sticky Header Navigation -->
+  <header id="main-header" class="site-header">
+    <div class="header-container">
+      <a href="#home" class="logo">
+        <span class="logo-dot"></span>Saba Shahid
+      </a>
+      
+      <!-- Desktop Navigation Menu -->
+      <nav class="desktop-nav" aria-label="Main Navigation">
+        <ul class="nav-list">
+          <li><a href="#home" class="nav-link active" id="nav-home">Home</a></li>
+          <li><a href="#about" class="nav-link" id="nav-about">About</a></li>
+          
+          <!-- Dropdown Portfolio Link -->
+          <li class="nav-item-dropdown">
+            <a href="#portfolio/seo" class="nav-link dropdown-trigger" id="nav-portfolio" aria-expanded="false" aria-haspopup="true">
+              Portfolio <i data-lucide="chevron-down" class="dropdown-arrow"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="#portfolio/seo" class="dropdown-item">SEO Portfolio</a></li>
+              <li><a href="#portfolio/wordpress" class="dropdown-item">WordPress Portfolio</a></li>
+              <li><a href="#portfolio/social" class="dropdown-item">Social Media Marketing</a></li>
+            </ul>
+          </li>
+          
+          <li><a href="#services" class="nav-link" id="nav-services">Services</a></li>
+          <li><a href="#contact" class="nav-link nav-cta" id="nav-contact-cta">Work Together</a></li>
+        </ul>
+      </nav>
+
+      <!-- Hamburger Button (Mobile Viewport Only) -->
+      <button class="hamburger-btn" id="mobile-menu-toggle" aria-label="Toggle Navigation Menu" aria-expanded="false" aria-controls="mobile-drawer">
+        <i data-lucide="menu" class="menu-icon-open"></i>
+        <i data-lucide="x" class="menu-icon-close hidden"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Menu Overlay -->
+  <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <nav class="mobile-nav" aria-label="Mobile Navigation">
+      <ul class="mobile-nav-list">
+        <li><a href="#home" class="mobile-nav-link" id="mob-nav-home">Home</a></li>
+        <li><a href="#about" class="mobile-nav-link" id="mob-nav-about">About</a></li>
+        
+        <!-- Collapsible Mobile Portfolio Dropdown -->
+        <li class="mobile-nav-item-dropdown">
+          <button class="mobile-dropdown-trigger" id="mobile-portfolio-trigger">
+            Portfolio <i data-lucide="chevron-down" class="mobile-dropdown-arrow"></i>
+          </button>
+          <ul class="mobile-dropdown-menu collapsed" id="mobile-portfolio-submenu">
+            <li><a href="#portfolio/seo" class="mobile-dropdown-item" id="mob-nav-seo">SEO Portfolio</a></li>
+            <li><a href="#portfolio/wordpress" class="mobile-dropdown-item" id="mob-nav-wp">WordPress Portfolio</a></li>
+            <li><a href="#portfolio/social" class="mobile-dropdown-item" id="mob-nav-smm">Social Media Marketing</a></li>
+          </ul>
+        </li>
+        
+        <li><a href="#services" class="mobile-nav-link" id="mob-nav-services">Services</a></li>
+        <li><a href="#contact" class="mobile-nav-link" id="mob-nav-contact">Contact</a></li>
+      </ul>
+      <div class="mobile-drawer-footer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <a href="mailto:sabaashahidd111@gmail.com" class="mobile-email-cta">
+          <i data-lucide="mail"></i> sabaashahidd111@gmail.com
+        </a>
+        <a href="tel:03232143758" class="mobile-email-cta">
+          <i data-lucide="phone"></i> 03232143758
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Dynamic Content Container -->
+  <main id="app-content">
+    <!-- Pages dynamically injected by app.js -->
+  </main>
+
+  <!-- Global Footer -->
+  <footer id="main-footer" class="site-footer">
+    <div class="footer-container">
+      
+      <!-- Brand & About Column -->
+      <div class="footer-col brand-col">
+        <a href="#home" class="footer-logo"><span class="logo-dot"></span>Saba Shahid</a>
+        <p class="footer-description">SEO • WordPress • Social Media Marketing</p>
+        <p class="footer-tagline">Helping businesses improve their online visibility, search rankings, website performance, and digital footprint.</p>
+      </div>
+
+      <!-- Quick Links Column -->
+      <div class="footer-col links-col">
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About Me</a></li>
+          <li><a href="#services">My Services</a></li>
+          <li><a href="#contact">Get In Touch</a></li>
+        </ul>
+      </div>
+
+      <!-- Portfolio Column -->
+      <div class="footer-col portfolio-col">
+        <h4 class="footer-title">Portfolio Categories</h4>
+        <ul class="footer-links">
+          <li><a href="#portfolio/seo">SEO Case Studies</a></li>
+          <li><a href="#portfolio/wordpress">WordPress Projects</a></li>
+          <li><a href="#portfolio/social">Social Media Campaigns</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact Info / Focus Column -->
+      <div class="footer-col contact-col">
+        <h4 class="footer-title">Let's Connect</h4>
+        <p class="footer-contact-text">Ready to scale your organic channels or build a brand-new WordPress website?</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <a href="mailto:sabaashahidd111@gmail.com" class="footer-email-btn" style="width: fit-content; display: inline-flex;">
+            <i data-lucide="mail"></i> Email Me Directly
+          </a>
+          <a href="tel:03232143758" class="footer-email-btn" style="width: fit-content; display: inline-flex; background-color: transparent; border-color: var(--color-border); color: var(--color-text-primary);">
+            <i data-lucide="phone"></i> Call: 03232143758
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer Credits -->
+    <div class="footer-bottom">
+      <div class="footer-bottom-container">
+        <p class="copyright">&copy; 2026 Saba Shahid. All Rights Reserved.</p>
+        <p class="footer-sub-text">Premium Growth Agency Aesthetic</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scroll-to-Top Button -->
+  <button id="back-to-top" class="back-to-top-btn" aria-label="Scroll to top">
+    <i data-lucide="arrow-up"></i>
+  </button>
+
+  <!-- Load Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

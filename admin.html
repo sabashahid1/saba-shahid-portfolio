@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal & CMS | Saba Shahid Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --color-bg-primary: #0A0A0A;
+      --color-bg-secondary: #111111;
+      --color-accent: #C7F000;
+      --color-accent-dim: rgba(199, 240, 0, 0.05);
+      --color-border: #262626;
+      --color-text-primary: #F5F5F0;
+      --color-text-secondary: #A3A3A3;
+      --color-error: #EF4444;
+      --color-success: #22C55E;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-primary: 'Plus Jakarta Sans', sans-serif;
+      --transition-fast: 0.2s ease;
+      --transition-normal: 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--color-bg-primary);
+      color: var(--color-text-primary);
+      font-family: var(--font-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    /* ==========================================================================
+       LOGIN PAGE VIEW
+       ========================================================================== */
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .login-card {
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--color-accent);
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .form-input {
+      background-color: var(--color-bg-primary);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-accent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.8rem 1.5rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: 1px solid transparent;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background-color: var(--color-accent);
+      color: #000000;
+    }
+
+    .btn-primary:hover {
+      background-color: #b2d700;
+      box-shadow: 0 0 15px rgba(199, 240, 0, 0.3);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border-color: var(--color-border);
+      color: var(--color-text-primary);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--color-bg-secondary);
+      border-color: var(--color-text-secondary);
+    }
+
+    .btn-danger {
+      background-color: var(--color-error);
+      color: var(--color-text-primary);
+    }
+
+    .btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    .alert-panel {
+      background-color: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--color-error);
+      color: var(--color-error);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+
+    /* ==========================================================================
+       DASHBOARD CONTAINER
+       ========================================================================== */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Panel */
+    .sidebar {
+      width: 260px;
+      background-color: var(--color-bg-secondary);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform var(--transition-normal);
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 2rem 1.5rem;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .sidebar-link:hover {
+      color: var(--color-text-primary);
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .sidebar-link.active {
+      color: #000000;
+      background-color: var(--color-accent);
+    }
+
+    .sidebar-submenu {
+      list-style: none;
+      padding-left: 2rem;
+      margin-top: 0.25rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .sidebar-sublink {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .sidebar-sublink:hover, .sidebar-sublink.active {
+      color: var(--color-accent);
+    }
+
+    /* Main Viewport Panel */
+    .main-viewport {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background-color: var(--color-bg-primary);
+    }
+
+    .top-navbar {
+      height: 70px;
+      background-color: var(--color-bg-secondary);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+    }
+
+    .navbar-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--color-accent-dim);
+      border: 1px solid var(--color-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-accent);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .content-area {
+      padding: 2.5rem;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    /* ==========================================================================
+       DASHBOARD PANELS / SECTIONS
+       ========================================================================== */
+    .dashboard-panel {
+      display: none;
+    }
+
+    .dashboard-panel.active {
+      display: block;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      margin-top: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      background-color: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-accent);
+    }
+
+    /* Panels & Tables */
+    .panel-card {
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+
+    /* Lists and Tables styling */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .admin-table th {
+      padding: 1rem;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .admin-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    .admin-table tr:hover td {
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-published {
+      background-color: rgba(34, 197, 94, 0.1);
+      color: var(--color-success);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .status-draft {
+      background-color: rgba(163, 163, 163, 0.1);
+      color: var(--color-text-secondary);
+      border: 1px solid rgba(163, 163, 163, 0.2);
+    }
+
+    .status-new {
+      background-color: rgba(199, 240, 0, 0.1);
+      color: var(--color-accent);
+      border: 1px solid rgba(199, 240, 0, 0.2);
+    }
+
+    .status-read {
+      background-color: rgba(163, 163, 163, 0.05);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+    }
+
+    /* Actions buttons */
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .action-btn:hover {
+      color: var(--color-text-primary);
+      border-color: var(--color-text-secondary);
+    }
+
+    .action-btn.btn-edit:hover {
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
+    .action-btn.btn-delete:hover {
+      color: var(--color-error);
+      border-color: var(--color-error);
+    }
+
+    /* ==========================================================================
+       FORMS & DIALOG EDITOR MODAL
+       ========================================================================== */
+    .editor-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .editor-overlay.active {
+      display: flex;
+    }
+
+    .editor-modal {
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 800px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .editor-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .editor-body {
+      padding: 2rem;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .editor-footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .editor-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    .editor-grid-span-2 {
+      grid-column: span 2;
+    }
+
+    /* Dynamic inputs lists (Objectives/Results) */
+    .dynamic-list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .dynamic-list-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Upload & Media Selection Box */
+    .media-selector-box {
+      border: 2px dashed var(--color-border);
+      background-color: rgba(255, 255, 255, 0.01);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      min-height: 180px;
+    }
+
+    .media-selector-box:hover {
+      border-color: var(--color-accent);
+      background-color: var(--color-accent-dim);
+    }
+
+    .media-preview-container {
+      position: relative;
+      width: 100%;
+      max-height: 250px;
+      overflow: hidden;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      display: none;
+    }
+
+    .media-preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .media-clear-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background-color: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* ==========================================================================
+       MEDIA LIBRARY TAB
+       ========================================================================== */
+    .media-library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .media-library-card {
+      background-color: var(--color-bg-primary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .media-library-card:hover {
+      border-color: var(--color-accent);
+      transform: scale(1.02);
+    }
+
+    .media-library-card.selected {
+      border: 2px solid var(--color-accent);
+      box-shadow: 0 0 10px rgba(199, 240, 0, 0.2);
+    }
+
+    .media-library-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .media-library-icon {
+      font-size: 2rem;
+      color: var(--color-text-secondary);
+    }
+
+    .media-library-delete-btn {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      background-color: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .media-library-card:hover .media-library-delete-btn {
+      opacity: 1;
+    }
+
+    /* Modal picker for editing forms */
+    .picker-modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ==========================================================================
+       DRAGGABLE REORDERING LISTS
+       ========================================================================== */
+    .reorder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .reorder-item {
+      background-color: var(--color-bg-primary);
+      border: 1px solid var(--color-border);
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      user-select: none;
+      transition: all var(--transition-fast);
+    }
+
+    .reorder-item:hover {
+      border-color: var(--color-accent);
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .reorder-item.dragging {
+      opacity: 0.5;
+      border-color: var(--color-accent);
+      background-color: var(--color-accent-dim);
+    }
+
+    .reorder-handle {
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+    }
+
+    /* ==========================================================================
+       MESSAGES / CONFIRMATIONS
+       ========================================================================== */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-bg-secondary);
+      border-left: 4px solid var(--color-accent);
+      color: var(--color-text-primary);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.toast-error {
+      border-left-color: var(--color-error);
+    }
+
+    .confirm-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      z-index: 1500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .confirm-overlay.active {
+      display: flex;
+    }
+
+    .confirm-card {
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .confirm-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .confirm-desc {
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* ==========================================================================
+       RESPONSIVENESS / COLLAPSIBLE SIDEBAR
+       ========================================================================== */
+    .mobile-menu-bar {
+      display: none;
+      height: 60px;
+      background-color: var(--color-bg-secondary);
+      border-bottom: 1px solid var(--color-border);
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+    }
+
+    .menu-toggle-btn {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (max-width: 991px) {
+      .app-container {
+        flex-direction: column;
+      }
+
+      .mobile-menu-bar {
+        display: flex;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 60px;
+        bottom: 0;
+        width: 260px;
+        transform: translateX(-100%);
+        box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .top-navbar {
+        display: none;
+      }
+
+      .content-area {
+        padding: 1.5rem;
+      }
+
+      .editor-grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .editor-grid-span-2 {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN AUTHENTICATION CONTAINER (LOGIN FORM) -->
+  <div id="login-viewport" class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="logo-badge">
+          <span class="logo-dot"></span> Saba Shahid Portfolio
+        </div>
+        <h2 class="login-title">Control Panel Login</h2>
+        <p class="login-subtitle">Authenticate credentials to manage your CMS database.</p>
+      </div>
+
+      <div id="login-alert" class="alert-panel"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-username">Username or Email</label>
+          <input class="form-input" type="text" id="login-username" placeholder="admin" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input class="form-input" type="password" id="login-password" placeholder="••••••••••••" required autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" type="submit" style="margin-top: 1rem;">
+          Log In <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN CMS APP WORKSPACE CONTAINER -->
+  <div id="app-viewport" class="app-container" style="display: none;">
+    
+    <!-- Mobile top header bar -->
+    <div class="mobile-menu-bar">
+      <div class="logo-badge" style="margin-bottom: 0;">
+        <span class="logo-dot"></span> Saba Shahid
+      </div>
+      <button class="menu-toggle-btn" id="mobile-sidebar-toggle">
+        <i data-lucide="menu" id="mob-menu-icon" style="width: 24px; height: 24px;"></i>
+      </button>
+    </div>
+
+    <!-- Collapsible Sidebar Navigation Panel -->
+    <aside class="sidebar" id="sidebar-panel">
+      <div class="sidebar-header">
+        <div class="logo-badge" style="margin: 0;">
+          <span class="logo-dot"></span> Portfolio CMS
+        </div>
+      </div>
+      <nav style="flex-grow: 1;">
+        <ul class="sidebar-menu">
+          <li>
+            <a class="sidebar-link active" data-target="panel-dashboard">
+              <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Dashboard
+            </a>
+          </li>
+          
+          <li>
+            <div class="sidebar-link" style="cursor: default;">
+              <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i> Portfolio
+            </div>
+            <ul class="sidebar-submenu">
+              <li><a class="sidebar-sublink" data-target="panel-seo">SEO Projects</a></li>
+              <li><a class="sidebar-sublink" data-target="panel-freelance">Local Citations</a></li>
+              <li><a class="sidebar-sublink" data-target="panel-wordpress">WordPress Projects</a></li>
+              <li><a class="sidebar-sublink" data-target="panel-ai">AI Development</a></li>
+              <li><a class="sidebar-sublink" data-target="panel-videos">AI Video Ads</a></li>
+            </ul>
+          </li>
+
+          <li>
+            <a class="sidebar-link" id="sidebar-add-new-btn">
+              <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Add New Project
+            </a>
+          </li>
+
+          <li>
+            <a class="sidebar-link" data-target="panel-media">
+              <i data-lucide="image" style="width: 16px; height: 16px;"></i> Media Library
+            </a>
+          </li>
+
+          <li>
+            <a class="sidebar-link" data-target="panel-testimonials">
+              <i data-lucide="message-square" style="width: 16px; height: 16px;"></i> Testimonials
+            </a>
+          </li>
+
+          <li>
+            <a class="sidebar-link" data-target="panel-faqs">
+              <i data-lucide="help-circle" style="width: 16px; height: 16px;"></i> FAQs
+            </a>
+          </li>
+
+          <li>
+            <a class="sidebar-link" data-target="panel-inquiries">
+              <i data-lucide="mail" style="width: 16px; height: 16px;"></i> Inquiries
+            </a>
+          </li>
+
+          <li>
+            <a class="sidebar-link" data-target="panel-settings">
+              <i data-lucide="settings" style="width: 16px; height: 16px;"></i> Website Settings
+            </a>
+          </li>
+
+          <li style="margin-top: auto;">
+            <a class="sidebar-link" id="logout-btn" style="color: var(--color-error); border-top: 1px solid var(--color-border); border-radius: 0; padding-top: 1.25rem;">
+              <i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Logout
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Workspace Content Viewport -->
+    <main class="main-viewport">
+      <!-- Desktop Top Nav -->
+      <div class="top-navbar">
+        <h3 class="navbar-title" id="navbar-title-text">Dashboard</h3>
+        <div class="user-profile">
+          <span id="user-display-name" style="font-weight: 600;">Saba Shahid</span>
+          <div class="avatar">SS</div>
+        </div>
+      </div>
+
+      <!-- Main Scrollable Content Area -->
+      <div class="content-area" id="main-content-area">
+        
+        <!-- ==========================================================
+             DASHBOARD TAB PANEL
+             ========================================================== -->
+        <section id="panel-dashboard" class="dashboard-panel active">
+          <div class="stats-grid" id="stats-summary-grid">
+            <!-- Populated dynamically by admin.js -->
+          </div>
+
+          <div class="editor-grid-2">
+            <!-- Recently Updated Projects -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3 class="panel-title">Active Projects Overview</h3>
+              </div>
+              <div class="table-container">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Project</th>
+                      <th>Category</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-projects-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Fast Action Card -->
+            <div class="panel-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 1.5rem;">
+              <i data-lucide="plus-circle" style="width: 60px; height: 60px; color: var(--color-accent);"></i>
+              <div>
+                <h3 class="panel-title" style="margin-bottom: 0.5rem;">Create New Portfolio Content</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); max-width: 280px; line-height: 1.5;">Quickly add case studies, WordPress designs, custom code portfolios, or testimonials.</p>
+              </div>
+              <button class="btn btn-primary" id="dashboard-quick-add-btn" style="width: fit-content; padding-left: 2rem; padding-right: 2rem;">
+                Launch Editor Wizard
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+             GENERIC PORTFOLIO GRID TAB PANEL
+             ========================================================== -->
+        <section id="panel-seo" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">SEO Case Studies</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Add and manage search engine optimization campaigns.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('seoProjects')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openProjectEditor('seoProjects')" style="width: fit-content;"><i data-lucide="plus"></i> Add SEO Case Study</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Project Name</th>
+                    <th>Website URL</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="seoProjects-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-freelance" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Local Citation & Citation Projects</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Manage local citation listings and directories.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('freelanceProjects')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openProjectEditor('freelanceProjects')" style="width: fit-content;"><i data-lucide="plus"></i> Add Local Citation</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Project Name</th>
+                    <th>Website URL</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="freelanceProjects-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-wordpress" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">WordPress Projects</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Manage WordPress designs and mockup links.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('wordpressProjects')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openProjectEditor('wordpressProjects')" style="width: fit-content;"><i data-lucide="plus"></i> Add WP Project</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Project Title</th>
+                    <th>Technologies</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="wordpressProjects-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-ai" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">AI & Software Engineering Projects</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Manage AI web products and software modules.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('aiProjects')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openProjectEditor('aiProjects')" style="width: fit-content;"><i data-lucide="plus"></i> Add AI Project</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Project Name</th>
+                    <th>Technology Stack</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="aiProjects-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-videos" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">SMM AI Video Ads</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Manage vertical 9:16 video cards rendered on your Social Media Marketing page.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('videoAds')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openProjectEditor('videoAds')" style="width: fit-content;"><i data-lucide="plus"></i> Add Video Ad Card</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Thumbnail</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>File URL</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="videoAds-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+             MEDIA LIBRARY TAB PANEL
+             ========================================================== -->
+        <section id="panel-media" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Media Library</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Upload and manage mockups, images, and videos.</p>
+              </div>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <input class="form-input" type="text" id="media-search" placeholder="Search files..." style="width: 220px; padding: 0.5rem 0.75rem;">
+                <button class="btn btn-primary" id="media-upload-trigger-btn" style="width: fit-content; padding: 0.5rem 1rem;"><i data-lucide="upload-cloud"></i> Upload File</button>
+                <input type="file" id="media-hidden-file-input" style="display: none;" accept="image/*,video/*">
+              </div>
+            </div>
+
+            <div class="media-library-grid" id="media-grid-container">
+              <!-- Grid items populated dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+             TESTIMONIALS TAB PANEL
+             ========================================================== -->
+        <section id="panel-testimonials" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Client Feedback</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Manage references rendered on the home page.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('testimonials')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openTestimonialEditor()"><i data-lucide="plus"></i> Add Testimonial</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Testimonial Text</th>
+                    <th>Rating</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="testimonials-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+             FAQS TAB PANEL
+             ========================================================== -->
+        <section id="panel-faqs" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Frequently Asked Questions</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Manage the accordion FAQ list displayed on the home page.</p>
+              </div>
+              <div class="action-group">
+                <button class="btn btn-secondary" onclick="openReorderModal('faqs')" style="width: fit-content;"><i data-lucide="arrow-up-down"></i> Reorder</button>
+                <button class="btn btn-primary" onclick="openFaqEditor()"><i data-lucide="plus"></i> Add FAQ</button>
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th>Answer</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="faqs-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+             INQUIRIES TAB PANEL
+             ========================================================== -->
+        <section id="panel-inquiries" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Contact Inquiries</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Review submissions submitted from the online Contact form.</p>
+              </div>
+              <div>
+                <input class="form-input" type="text" id="inquiry-search" placeholder="Search inquiries..." style="width: 220px; padding: 0.5rem 0.75rem;">
+              </div>
+            </div>
+            
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Visitor Name</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Company</th>
+                    <th>Subject/Service</th>
+                    <th>Message Details</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="inquiries-tbody">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+             SETTINGS TAB PANEL
+             ========================================================== -->
+        <section id="panel-settings" class="dashboard-panel">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Website Settings</h3>
+                <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">Update the public-facing variables and manage admin passwords.</p>
+              </div>
+            </div>
+
+            <form id="settings-form" style="max-width: 600px;">
+              <div class="editor-grid-2">
+                <div class="form-group">
+                  <label class="form-label" for="sett-name">Owner Name</label>
+                  <input class="form-input" type="text" id="sett-name" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="sett-phone">Phone Number</label>
+                  <input class="form-input" type="text" id="sett-phone" required>
+                </div>
+                <div class="form-group editor-grid-span-2">
+                  <label class="form-label" for="sett-email">Contact Email Address</label>
+                  <input class="form-input" type="email" id="sett-email" required>
+                </div>
+                <div class="form-group editor-grid-span-2">
+                  <label class="form-label" for="sett-bio">Brief Bio</label>
+                  <input class="form-input" type="text" id="sett-bio">
+                </div>
+                <div class="form-group editor-grid-span-2">
+                  <label class="form-label" for="sett-footer">Footer Tagline/Description</label>
+                  <textarea class="form-input" id="sett-footer" style="min-height: 80px; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label" for="sett-link-linkedin">LinkedIn Profile URL</label>
+                  <input class="form-input" type="text" id="sett-link-linkedin">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="sett-link-twitter">Twitter URL</label>
+                  <input class="form-input" type="text" id="sett-link-twitter">
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit" style="margin-top: 1.5rem; width: fit-content; padding-left: 2.5rem; padding-right: 2.5rem;">
+                Save Public Configuration
+              </button>
+            </form>
+          </div>
+
+          <div class="panel-card" style="margin-top: 2rem;">
+            <div class="panel-header">
+              <h3 class="panel-title">Change Password</h3>
+            </div>
+            <form id="password-change-form" style="max-width: 400px;">
+              <div class="form-group">
+                <label class="form-label" for="pass-new">New Password</label>
+                <input class="form-input" type="password" id="pass-new" placeholder="At least 6 characters" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="pass-confirm">Confirm Password</label>
+                <input class="form-input" type="password" id="pass-confirm" placeholder="Re-type password" required>
+              </div>
+              <button class="btn btn-primary" type="submit" style="margin-top: 1rem; width: fit-content;">
+                Update Admin Password
+              </button>
+            </form>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ==========================================================
+       MODAL WIZARDS (CREATORS & EDITORS)
+       ========================================================== -->
+  
+  <!-- Universal Project Editor Modal -->
+  <div class="editor-overlay" id="project-editor-overlay">
+    <div class="editor-modal">
+      <div class="editor-header">
+        <h3 class="panel-title" id="project-editor-title">Add Portfolio Item</h3>
+        <button class="action-btn" onclick="closeProjectEditor()" style="width: 28px; height: 28px;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="editor-body">
+        <form id="project-editor-form">
+          <input type="hidden" id="editor-project-type">
+          <input type="hidden" id="editor-project-id">
+          
+          <div class="editor-grid-2">
+            <!-- Left inputs panel -->
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              <div class="form-group">
+                <label class="form-label" for="editor-proj-name">Project Title / Name</label>
+                <input class="form-input" type="text" id="editor-proj-name" required>
+              </div>
+              
+              <div class="form-group field-video-only">
+                <label class="form-label" for="editor-proj-category">Category / Tag</label>
+                <input class="form-input" type="text" id="editor-proj-category" placeholder="e.g. Product Showcase, Fashion">
+              </div>
+              
+              <!-- SEO Specific Fields -->
+              <div class="form-group field-seo-only">
+                <label class="form-label" for="editor-proj-website">Website URL</label>
+                <input class="form-input" type="url" id="editor-proj-website" placeholder="https://">
+              </div>
+              <div class="form-group field-seo-only">
+                <label class="form-label" for="editor-proj-duration">Duration</label>
+                <input class="form-input" type="text" id="editor-proj-duration" placeholder="e.g. 3 Months">
+              </div>
+
+              <!-- WP / AI / Video Fields -->
+              <div class="form-group field-desc-only editor-grid-span-2">
+                <label class="form-label" for="editor-proj-desc">Description</label>
+                <textarea class="form-input" id="editor-proj-desc" style="min-height: 80px; resize: vertical;"></textarea>
+              </div>
+              <div class="form-group field-tech-only">
+                <label class="form-label" for="editor-proj-tech">Technology Stack</label>
+                <input class="form-input" type="text" id="editor-proj-tech" placeholder="e.g. Next.js • React">
+              </div>
+              <div class="form-group field-highlight-only editor-grid-span-2">
+                <label class="form-label" for="editor-proj-highlight">Project Highlight Statement</label>
+                <input class="form-input" type="text" id="editor-proj-highlight">
+              </div>
+
+              <!-- Work Completed / Tags -->
+              <div class="form-group editor-grid-span-2">
+                <label class="form-label" for="editor-proj-tags">Work Completed / Tags (comma separated)</label>
+                <input class="form-input" type="text" id="editor-proj-tags" placeholder="e.g. On-Page SEO, Backlink Building">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="editor-proj-status">Publication Status</label>
+                <select class="form-input" id="editor-proj-status" style="background-color: var(--color-bg-primary);">
+                  <option value="Published">Published (Live)</option>
+                  <option value="Draft">Draft (Hidden)</option>
+                </select>
+              </div>
+
+              <!-- Dynamic objectives list (SEO only) -->
+              <div class="form-group field-seo-only editor-grid-span-2">
+                <label class="form-label">Project Objectives</label>
+                <div class="dynamic-list-container" id="editor-objectives-container"></div>
+                <button type="button" class="btn btn-secondary" onclick="addDynamicRow('editor-objectives-container')" style="width: fit-content; padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 0.5rem;">+ Add Objective</button>
+              </div>
+
+              <!-- Dynamic results list (SEO only) -->
+              <div class="form-group field-seo-only editor-grid-span-2">
+                <label class="form-label">Qualitative Results / Outcomes</label>
+                <div class="dynamic-list-container" id="editor-results-container"></div>
+                <button type="button" class="btn btn-secondary" onclick="addDynamicRow('editor-results-container')" style="width: fit-content; padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 0.5rem;">+ Add Result</button>
+              </div>
+
+              <!-- SEO Meta Tags Settings -->
+              <div class="form-group editor-grid-span-2" style="border-top: 1px solid var(--color-border); padding-top: 1rem; margin-top: 1rem;">
+                <label class="form-label" style="color: var(--color-accent);">Custom SEO Header Parameters (Optional)</label>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="editor-seo-title">SEO Meta Title</label>
+                <input class="form-input" type="text" id="editor-seo-title">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="editor-seo-slug">Custom URL Slug</label>
+                <input class="form-input" type="text" id="editor-seo-slug" placeholder="e.g. my-project-slug">
+              </div>
+              <div class="form-group editor-grid-span-2">
+                <label class="form-label" for="editor-seo-desc">SEO Meta Description</label>
+                <textarea class="form-input" id="editor-seo-desc" style="min-height: 60px; resize: vertical;"></textarea>
+              </div>
+
+            </div>
+
+            <!-- Right uploads panel -->
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              
+              <!-- Featured Image Box -->
+              <div class="form-group field-image-only">
+                <label class="form-label">Featured Image / Mockup</label>
+                <div class="media-selector-box" id="featured-image-selector" onclick="openMediaPicker('featured-image')">
+                  <i data-lucide="image" style="width: 32px; height: 32px; color: var(--color-text-secondary);"></i>
+                  <span>Click to select from Media Library</span>
+                  <div class="media-preview-container" id="featured-image-preview-wrapper">
+                    <img src="" class="media-preview-img" id="featured-image-preview">
+                    <div class="media-clear-btn" onclick="clearSelectedMedia(event, 'featured-image')"><i data-lucide="trash"></i></div>
+                  </div>
+                </div>
+                <input type="hidden" id="editor-proj-featured-image">
+              </div>
+
+              <!-- Video Ad Box -->
+              <div class="form-group field-video-only">
+                <label class="form-label">Select 9:16 Video File</label>
+                <div class="media-selector-box" id="video-selector" onclick="openMediaPicker('video')">
+                  <i data-lucide="video" style="width: 32px; height: 32px; color: var(--color-text-secondary);"></i>
+                  <span>Click to select video from Media Library</span>
+                  <div class="media-preview-container" id="video-preview-wrapper" style="aspect-ratio: 9/16; max-height: 350px;">
+                    <video src="" class="media-preview-img" id="video-preview" muted playsinline style="object-fit: contain; background: #000;"></video>
+                    <div class="media-clear-btn" onclick="clearSelectedMedia(event, 'video')"><i data-lucide="trash"></i></div>
+                  </div>
+                </div>
+                <input type="hidden" id="editor-proj-video">
+              </div>
+
+              <!-- Thumbnail / Poster Image Box -->
+              <div class="form-group field-video-only">
+                <label class="form-label">Thumbnail / Poster Image</label>
+                <div class="media-selector-box" id="thumbnail-selector" onclick="openMediaPicker('thumbnail')">
+                  <i data-lucide="image" style="width: 32px; height: 32px; color: var(--color-text-secondary);"></i>
+                  <span>Click to select poster image from Media Library</span>
+                  <div class="media-preview-container" id="thumbnail-preview-wrapper">
+                    <img src="" class="media-preview-img" id="thumbnail-preview">
+                    <div class="media-clear-btn" onclick="clearSelectedMedia(event, 'thumbnail')"><i data-lucide="trash"></i></div>
+                  </div>
+                </div>
+                <input type="hidden" id="editor-proj-thumbnail">
+              </div>
+
+              <!-- Screenshot 1 Box (SEO) -->
+              <div class="form-group field-seo-only">
+                <label class="form-label">Search Visibility Chart (Screenshot 1)</label>
+                <div class="media-selector-box" id="screenshot1-selector" onclick="openMediaPicker('screenshot1')">
+                  <i data-lucide="bar-chart-2" style="width: 32px; height: 32px; color: var(--color-text-secondary);"></i>
+                  <span>Select Screenshot 1</span>
+                  <div class="media-preview-container" id="screenshot1-preview-wrapper">
+                    <img src="" class="media-preview-img" id="screenshot1-preview">
+                    <div class="media-clear-btn" onclick="clearSelectedMedia(event, 'screenshot1')"><i data-lucide="trash"></i></div>
+                  </div>
+                </div>
+                <input type="hidden" id="editor-proj-screenshot1">
+              </div>
+
+              <!-- Screenshot 2 Box (SEO) -->
+              <div class="form-group field-seo-only">
+                <label class="form-label">Audit / Keyword Report (Screenshot 2)</label>
+                <div class="media-selector-box" id="screenshot2-selector" onclick="openMediaPicker('screenshot2')">
+                  <i data-lucide="file-text" style="width: 32px; height: 32px; color: var(--color-text-secondary);"></i>
+                  <span>Select Screenshot 2</span>
+                  <div class="media-preview-container" id="screenshot2-preview-wrapper">
+                    <img src="" class="media-preview-img" id="screenshot2-preview">
+                    <div class="media-clear-btn" onclick="clearSelectedMedia(event, 'screenshot2')"><i data-lucide="trash"></i></div>
+                  </div>
+                </div>
+                <input type="hidden" id="editor-proj-screenshot2">
+              </div>
+
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-secondary" onclick="closeProjectEditor()" style="width: fit-content;">Cancel</button>
+        <button class="btn btn-primary" id="project-preview-btn" style="width: fit-content;"><i data-lucide="eye"></i> Live Preview</button>
+        <button class="btn btn-primary" onclick="saveProjectForm()" style="width: fit-content;">Save Portfolio Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testimonial Editor Modal -->
+  <div class="editor-overlay" id="testimonial-editor-overlay">
+    <div class="editor-modal" style="max-width: 500px;">
+      <div class="editor-header">
+        <h3 class="panel-title" id="testimonial-editor-title">Add Testimonial</h3>
+        <button class="action-btn" onclick="closeTestimonialEditor()" style="width: 28px; height: 28px;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="editor-body">
+        <form id="testimonial-editor-form">
+          <input type="hidden" id="editor-t-id">
+          <div class="form-group">
+            <label class="form-label" for="editor-t-name">Client Name</label>
+            <input class="form-input" type="text" id="editor-t-name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editor-t-role">Role / Business Type</label>
+            <input class="form-input" type="text" id="editor-t-role" placeholder="e.g. Store Owner">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editor-t-text">Testimonial Text</label>
+            <textarea class="form-input" id="editor-t-text" style="min-height: 100px; resize: vertical;" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editor-t-rating">Star Rating (1-5)</label>
+            <select class="form-input" id="editor-t-rating" style="background-color: var(--color-bg-primary);">
+              <option value="5" selected>5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editor-t-status">Status</label>
+            <select class="form-input" id="editor-t-status" style="background-color: var(--color-bg-primary);">
+              <option value="Published">Published (Live)</option>
+              <option value="Draft">Draft (Hidden)</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-secondary" onclick="closeTestimonialEditor()" style="width: fit-content;">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTestimonialForm()" style="width: fit-content;">Save Testimonial</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ Editor Modal -->
+  <div class="editor-overlay" id="faq-editor-overlay">
+    <div class="editor-modal" style="max-width: 500px;">
+      <div class="editor-header">
+        <h3 class="panel-title" id="faq-editor-title">Add FAQ</h3>
+        <button class="action-btn" onclick="closeFaqEditor()" style="width: 28px; height: 28px;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="editor-body">
+        <form id="faq-editor-form">
+          <input type="hidden" id="editor-f-id">
+          <div class="form-group">
+            <label class="form-label" for="editor-f-question">Question</label>
+            <input class="form-input" type="text" id="editor-f-question" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editor-f-answer">Answer</label>
+            <textarea class="form-input" id="editor-f-answer" style="min-height: 120px; resize: vertical;" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editor-f-status">Status</label>
+            <select class="form-input" id="editor-f-status" style="background-color: var(--color-bg-primary);">
+              <option value="Published">Published (Live)</option>
+              <option value="Draft">Draft (Hidden)</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-secondary" onclick="closeFaqEditor()" style="width: fit-content;">Cancel</button>
+        <button class="btn btn-primary" onclick="saveFaqForm()" style="width: fit-content;">Save FAQ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Universal Category Selector Modal -->
+  <div class="editor-overlay" id="category-selector-overlay">
+    <div class="editor-modal" style="max-width: 400px; text-align: center;">
+      <div class="editor-header">
+        <h3 class="panel-title">Add New Content</h3>
+        <button class="action-btn" onclick="closeCategorySelector()" style="width: 28px; height: 28px;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="editor-body" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 2rem;">
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1rem;">Select a portfolio category to configure details:</p>
+        <button class="btn btn-secondary" onclick="selectNewProjectCategory('seoProjects')">SEO Case Study</button>
+        <button class="btn btn-secondary" onclick="selectNewProjectCategory('freelanceProjects')">Local Citation Listing</button>
+        <button class="btn btn-secondary" onclick="selectNewProjectCategory('wordpressProjects')">WordPress Website Design</button>
+        <button class="btn btn-secondary" onclick="selectNewProjectCategory('aiProjects')">AI / Software Development</button>
+        <button class="btn btn-secondary" onclick="selectNewProjectCategory('videoAds')">AI Video Ad (SMM Page)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Library Picker Modal Modal -->
+  <div class="editor-overlay" id="media-picker-overlay" style="z-index: 1100;">
+    <div class="editor-modal" style="max-width: 700px;">
+      <div class="editor-header">
+        <h3 class="panel-title">Select Media file</h3>
+        <button class="action-btn" onclick="closeMediaPicker()" style="width: 28px; height: 28px;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="editor-body picker-modal-body">
+        <div style="display: flex; gap: 1rem; align-items: center; justify-content: space-between;">
+          <input class="form-input" type="text" id="media-picker-search" placeholder="Search files..." style="width: 250px; padding: 0.5rem 0.75rem;">
+          <div>
+            <button class="btn btn-primary" id="media-picker-upload-btn" style="width: fit-content; padding: 0.5rem 1rem;"><i data-lucide="upload-cloud"></i> Upload New</button>
+            <input type="file" id="media-picker-hidden-file" style="display: none;" accept="image/*,video/*">
+          </div>
+        </div>
+        <div class="media-library-grid" id="media-picker-grid" style="max-height: 40vh; overflow-y: auto; padding: 0.25rem;">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-secondary" onclick="closeMediaPicker()" style="width: fit-content;">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmMediaPickerSelection()" style="width: fit-content;">Select & Use Media</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drag-and-drop Reordering Modal -->
+  <div class="editor-overlay" id="reorder-overlay">
+    <div class="editor-modal" style="max-width: 500px;">
+      <div class="editor-header">
+        <h3 class="panel-title">Reorder Items</h3>
+        <button class="action-btn" onclick="closeReorderModal()" style="width: 28px; height: 28px;"><i data-lucide="x"></i></button>
+      </div>
+      <div class="editor-body" style="padding-top: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1rem;">Drag and drop elements to re-arrange their order of appearance on the frontend.</p>
+        <div class="reorder-list" id="reorder-list-container">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+      <div class="editor-footer">
+        <button class="btn btn-secondary" onclick="closeReorderModal()" style="width: fit-content;">Cancel</button>
+        <button class="btn btn-primary" onclick="saveItemsOrder()" style="width: fit-content;">Save Display Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="confirm-overlay" id="delete-confirm-overlay">
+    <div class="confirm-card">
+      <h4 class="confirm-title">Confirm Deletion</h4>
+      <p class="confirm-desc" id="delete-confirm-message">Are you sure you want to delete this item? This action is permanent and cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteConfirmation()">Cancel</button>
+        <button class="btn btn-danger" id="delete-confirm-submit-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Universal Toast alert -->
+  <div class="toast" id="admin-toast">
+    <i data-lucide="check-circle" id="admin-toast-icon"></i>
+    <span id="admin-toast-message">Operation successful!</span>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/admin.js"></script>
+</body>
+</html>
