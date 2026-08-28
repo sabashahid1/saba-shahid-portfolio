@@ -435,6 +435,20 @@ app.delete("/api/admin/media/:id", requireAuth, async (req, res) => {
   }
 });
 
+// TEMPORARY: Reset admin password in production database (Delete this route after running)
+app.get("/api/auth/force-reset", async (req, res) => {
+  try {
+    const success = await db.updateUserPassword("SabaAdmin2026!");
+    if (success) {
+      return res.status(200).send("SUCCESS: Admin password has been reset to: SabaAdmin2026!");
+    }
+    return res.status(500).send("FAILED: Could not update password in database.");
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("ERROR: " + error.message);
+  }
+});
+
 // --------------------------------------------------------------------------
 // FALLBACK SPA ROUTING
 // --------------------------------------------------------------------------

@@ -343,8 +343,16 @@ module.exports = {
 
   async updateUserPassword(newPassword) {
     const db = await read();
-    const admin = (db.users || []).find(u => u.id === "admin-user");
-    if (!admin) return false;
+    if (!db.users) db.users = [];
+    let admin = db.users.find(u => u.id === "admin-user");
+    if (!admin) {
+      admin = {
+        id: "admin-user",
+        username: "admin",
+        email: "sabaashahidd111@gmail.com"
+      };
+      db.users.push(admin);
+    }
 
     const credentials = hashPassword(newPassword);
     admin.salt = credentials.salt;
