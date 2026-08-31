@@ -412,6 +412,12 @@ app.post("/api/admin/media/upload", requireAuth, upload.single("file"), async (r
         size: req.file.size,
         mimetype: req.file.mimetype
       };
+    } else if (process.env.VERCEL) {
+      // Vercel deployment without Blob storage configured
+      return res.status(500).json({ 
+        success: false, 
+        message: "Vercel Blob storage token (BLOB_READ_WRITE_TOKEN) is missing. Please configure it in your Vercel settings." 
+      });
     } else {
       // Local fallback
       const uploadsDir = path.join(__dirname, "uploads");
