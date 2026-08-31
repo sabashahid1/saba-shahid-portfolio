@@ -214,6 +214,21 @@ app.get("/api/admin/projects/:type", requireAuth, async (req, res) => {
   res.status(200).json({ success: true, data: await db.getItems(type) });
 });
 
+app.get("/api/admin/projects/:type/:id", requireAuth, async (req, res) => {
+  const { type, id } = req.params;
+  try {
+    const item = await db.getItemById(type, id);
+    if (item) {
+      res.status(200).json({ success: true, data: item });
+    } else {
+      res.status(404).json({ success: false, message: "Project not found." });
+    }
+  } catch (error) {
+    console.error("Fetch project failed:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch project." });
+  }
+});
+
 app.post("/api/admin/projects/:type", requireAuth, async (req, res) => {
   const { type } = req.params;
   const created = await db.addItem(type, req.body);

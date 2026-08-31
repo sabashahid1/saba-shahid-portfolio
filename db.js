@@ -445,15 +445,15 @@ module.exports = {
     const newId = `${item.id}-copy-${crypto.randomBytes(3).toString("hex")}`;
     const order = db[type].length > 0 ? Math.max(...db[type].map(o => o.order || 0)) + 1 : 1;
 
-    const copy = {
-      ...item,
-      id: newId,
-      name: item.name ? `${item.name} (Copy)` : undefined,
-      question: item.question ? `${item.question} (Copy)` : undefined,
-      title: item.title ? `${item.title} (Copy)` : undefined,
-      status: "Draft",
-      order
-    };
+    // Deep clone to ensure total independence of arrays and nested fields
+    const copy = JSON.parse(JSON.stringify(item));
+    copy.id = newId;
+    copy.order = order;
+    copy.status = "Draft";
+
+    if (copy.name) copy.name = `${copy.name} (Copy)`;
+    if (copy.question) copy.question = `${copy.question} (Copy)`;
+    if (copy.title) copy.title = `${copy.title} (Copy)`;
 
     db[type].push(copy);
     return (await write(db)) ? copy : null;
