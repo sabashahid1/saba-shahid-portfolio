@@ -206,17 +206,21 @@ async function init() {
     }
   } else {
     // Local JSON
-    const dir = path.dirname(DB_FILE);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    const uploadsDir = path.join(__dirname, "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    if (!fs.existsSync(DB_FILE)) {
-      fs.writeFileSync(DB_FILE, JSON.stringify(defaultData, null, 2), "utf8");
-      console.log("JSON Database file initialized and seeded.");
+    try {
+      const dir = path.dirname(DB_FILE);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      const uploadsDir = path.join(__dirname, "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      if (!fs.existsSync(DB_FILE)) {
+        fs.writeFileSync(DB_FILE, JSON.stringify(defaultData, null, 2), "utf8");
+        console.log("JSON Database file initialized and seeded.");
+      }
+    } catch (err) {
+      console.warn("Failed to initialize local filesystem database (likely running on read-only serverless environment like Vercel):", err.message);
     }
   }
 }
@@ -314,6 +318,16 @@ module.exports = {
 
   // Auth Operations
   async verifyUser(username, password) {
+    // 1. Environment Variable Override (Highly recommended for Vercel/Production deployment)
+    const envUsername = process.env.ADMIN_USERNAME;
+    const envPassword = process.env.ADMIN_PASSWORD;
+    if (envUsername && envPassword) {
+      if ((username === envUsername || username === "sabaashahidd111@gmail.com") && password === envPassword) {
+        return { id: "admin-user", username: envUsername, email: "sabaashahidd111@gmail.com" };
+      }
+    }
+
+    // 2. Database verification fallback
     const db = await read();
     let user = (db.users || []).find(u => u.username === username || u.email === username);
     
@@ -343,16 +357,8 @@ module.exports = {
 
   async updateUserPassword(newPassword) {
     const db = await read();
-    if (!db.users) db.users = [];
-    let admin = db.users.find(u => u.id === "admin-user");
-    if (!admin) {
-      admin = {
-        id: "admin-user",
-        username: "admin",
-        email: "sabaashahidd111@gmail.com"
-      };
-      db.users.push(admin);
-    }
+    const admin = (db.users || []).find(u => u.id === "admin-user");
+    if (!admin) return false;
 
     const credentials = hashPassword(newPassword);
     admin.salt = credentials.salt;
