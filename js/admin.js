@@ -658,8 +658,15 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       body: formData
     })
-      .then(res => {
-        if (!res.ok) throw new Error("Upload failed");
+      .then(async res => {
+        if (!res.ok) {
+          try {
+            const data = await res.json();
+            throw new Error(data.message || "Upload failed");
+          } catch (e) {
+            throw new Error(e.message || `Upload failed (HTTP ${res.status})`);
+          }
+        }
         return res.json();
       })
       .then(data => {
