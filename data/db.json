@@ -22,40 +22,189 @@
   "seoProjects": [
     {
       "id": "food-copycat",
-      "name": "Food Copy Cat",
-      "website": "",
-      "workCompleted": [],
-      "duration": "",
-      "objectives": [],
-      "results": [],
+      "name": "FoodCopycat.com",
+      "website": "https://foodcopycat.com/",
+      "workCompleted": [
+        "Local SEO & On-Page SEO",
+        "Technical SEO",
+        "Off-Page SEO",
+        "Keyword & Content Optimization",
+        "Blog Writing & Link Building"
+      ],
+      "duration": "August 2025 – Present",
+      "domainAge": "Launched in August 2025",
+      "overview": "FoodCopycat.com is a blogging website focused on Copycat recipes and cooking tips. The website aims to provide valuable, high-quality content to its audience while improving organic search visibility and user engagement. Since its launch in August 2025, the site has focused on delivering informative and engaging content that ranks well on Google and keeps users coming back.",
+      "targetKeywords": [
+        "Omakase Sauce",
+        "Cajun Burger",
+        "KFC Stacker sauce"
+      ],
+      "objectives": [
+        "Improve organic traffic and search visibility.",
+        "Enhance user engagement and session duration.",
+        "Optimize content for better reach and relevance.",
+        "Increase search engine rankings for targeted keywords."
+      ],
+      "contributions": [
+        {
+          "title": "Local SEO & On-Page SEO",
+          "intro": "To establish FoodCopycat.com as a reliable resource in its niche, we implemented a targeted SEO strategy:",
+          "items": [
+            {
+              "label": "Keyword Optimization",
+              "detail": "Identified high-traffic keywords like “Omakase Sauce”, “Cajun Burger”, and “KFC Stacker sauce”, integrating them into blog posts, meta descriptions, and service pages."
+            },
+            {
+              "label": "Content Optimization",
+              "detail": "Improved existing articles and created new high-quality content to satisfy user intent and increase search relevance, including optimized meta tags and structured data implementation."
+            },
+            {
+              "label": "Technical SEO",
+              "detail": "Optimized website structure, Google Search Console setup, site speed, mobile responsiveness, and implemented structured data."
+            },
+            {
+              "label": "Review & Engagement Signals",
+              "detail": "Monitored user behavior to improve internal linking, readability, and session duration."
+            }
+          ],
+          "result": "Organic traffic grew steadily, and multiple blog posts ranked on Google’s first page for targeted and long-tail keywords."
+        },
+        {
+          "title": "Off-Page SEO",
+          "intro": "To enhance domain authority and overall visibility:",
+          "items": [
+            {
+              "label": "Link Building",
+              "detail": "Built high-quality backlinks from relevant and authoritative websites."
+            },
+            {
+              "label": "Outreach",
+              "detail": "Collaborated with influencers and websites in the niche to improve traffic and referral links."
+            },
+            {
+              "label": "Content Marketing",
+              "detail": "Promoted blog content across social media and online platforms to drive engagement and build credibility."
+            }
+          ],
+          "result": "The website achieved better keyword rankings and increased impressions in search results, improving overall visibility."
+        }
+      ],
+      "results": [
+        "Traffic Growth: Organic traffic has shown consistent growth since the website launch through regular content publishing and SEO optimization.",
+        "Keyword Rankings: Multiple blog posts appeared on Google’s first page for targeted and long-tail keywords within a short time period.",
+        "Overall Keyword Visibility: Overall keyword visibility improved, helping the website gain better impressions in search results.",
+        "User Engagement: Session duration improved and bounce rate decreased due to enhanced content structure, readability, better internal linking, and improved page experience.",
+        "Content Authority: Built credibility in the niche through high-quality blogs and backlinks."
+      ],
+      "impactSummary": "By applying a comprehensive SEO strategy and combining technical expertise with content optimization, we helped FoodCopycat.com grow into a competitive and authoritative resource in its niche.",
+      "analyticsMetrics": {
+        "source": "Google Analytics & Search Performance",
+        "kpis": [
+          { "label": "Total Impressions", "value": "17K", "change": "↑ 226.1%" },
+          { "label": "Total Clicks", "value": "78", "change": "↑ 143.8%" },
+          { "label": "Unique Visitors from Search", "value": "128", "change": "↑ 106.5%" }
+        ]
+      },
+      "pagespeed": {
+        "device": "Mobile",
+        "scores": [
+          { "label": "Performance", "score": 96 },
+          { "label": "Accessibility", "score": 91 },
+          { "label": "Best Practices", "score": 96 },
+          { "label": "SEO", "score": 92 }
+        ]
+      },
+      "toolsUsed": [
+        {
+          "group": "Analytics and Monitoring",
+          "tools": ["Google Analytics", "Google Search Console", "Google Site Kit"]
+        },
+        {
+          "group": "SEO Tools",
+          "tools": ["SEMrush", "Ubersuggest", "Keyword Surfer"]
+        }
+      ],
       "images": [
         "/uploads/file-1787648456689-603532847.png"
       ],
       "status": "Published",
-      "order": 1,
-      "seoTitle": "",
-      "seoSlug": "",
-      "seoMetaDesc": ""
+      "order": 1
     },
     {
       "id": "66-marketings",
-      "name": "66 Marketings",
+      "name": "66marketings.com",
       "website": "https://66marketings.com/",
       "workCompleted": [
-        "On-Page SEO",
-        "Backlink Building"
+        "On-Page SEO & Local Optimization",
+        "Off-Page SEO",
+        "Technical SEO",
+        "Content Optimization",
+        "Backlink Building & Outreach"
       ],
-      "duration": "3 Months",
+      "duration": "December 2023 – August 2024",
+      "overview": "66marketings.com is an e-commerce agency website that offers digital marketing solutions to businesses seeking to improve their online presence. From December 2023 to August 2024, the website focused on attracting relevant traffic, improving search visibility, and providing a seamless experience for users looking for marketing services.",
       "objectives": [
-        "Analyze and improve on-page SEO elements for core landing pages.",
-        "Optimize website content copy and metadata structure for primary target terms.",
-        "Build relevant backlinks to strengthen domain authority and drive search engine crawlers."
+        "Attract relevant organic traffic and improve search engine visibility for digital marketing service offerings.",
+        "Identify high-traffic, relevant keywords and integrate them into service pages, blog posts, and meta descriptions.",
+        "Optimize website structure, internal linking, mobile responsiveness, and site speed for better search performance.",
+        "Strengthen domain authority through high-quality backlinks, content outreach, and off-page SEO campaigns."
+      ],
+      "contributions": [
+        {
+          "title": "On-Page SEO & Local Optimization",
+          "intro": "To enhance 66marketings.com’s visibility in search engines, we implemented a targeted on-page SEO strategy:",
+          "items": [
+            {
+              "label": "Keyword Optimization",
+              "detail": "Identified high-traffic and relevant keywords and integrated them into service pages, blog posts, and meta descriptions."
+            },
+            {
+              "label": "Content Optimization",
+              "detail": "Improved existing website content and created high-quality SEO-friendly blogs to address user intent."
+            },
+            {
+              "label": "Technical SEO",
+              "detail": "Optimized website structure, internal linking, mobile responsiveness, and site speed for better search performance."
+            }
+          ],
+          "result": "Organic traffic grew consistently, and key service pages began ranking higher for targeted keywords."
+        },
+        {
+          "title": "Off-Page SEO",
+          "intro": "To strengthen the website’s authority and improve rankings:",
+          "items": [
+            {
+              "label": "Backlink Building",
+              "detail": "Acquired high-quality and relevant backlinks from authoritative sources in the marketing niche."
+            },
+            {
+              "label": "Content Outreach",
+              "detail": "Promoted blog posts and website content to relevant platforms to attract referral traffic."
+            },
+            {
+              "label": "SEO Campaigns",
+              "detail": "Implemented off-page strategies to enhance domain authority and improve search visibility."
+            }
+          ],
+          "result": "Keyword rankings improved, domain authority increased, and the website gained more impressions in search results."
+        }
       ],
       "results": [
-        "Enhanced on-page search engine compatibility and metadata health.",
-        "Stronger and more relevant backlink profile targeting niche terms.",
-        "Established a solid SEO foundation for long-term ranking growth."
+        "Traffic Growth: Organic traffic increased steadily due to optimized content and consistent SEO practices.",
+        "Keyword Rankings: Multiple blogs and service pages ranked on Google’s first page for targeted keywords.",
+        "User Engagement: Session duration improved and bounce rate decreased through better content structure and readability.",
+        "Domain Authority: High-quality backlinks and off-page strategies strengthened the website’s credibility."
       ],
+      "impactSummary": "By combining on-page optimization, content creation, and off-page SEO strategies, we helped 66marketings.com grow its digital presence and establish itself as a competitive e-commerce agency in the digital marketing space.",
+      "analyticsMetrics": {
+        "source": "Google Search Console (07/05/2024 – 28/05/2024)",
+        "kpis": [
+          { "label": "Total Clicks", "value": "269" },
+          { "label": "Total Impressions", "value": "7.92K" },
+          { "label": "Average CTR", "value": "3.4%" },
+          { "label": "Average Position", "value": "14.3" }
+        ]
+      },
       "images": [],
       "status": "Published",
       "order": 2

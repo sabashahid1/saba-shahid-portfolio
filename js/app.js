@@ -101,22 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
       backToTopBtn.classList.remove("visible");
     }
 
-    // Blank page handler for SEO Portfolio page
+    // Floating navigation widget visibility for SEO Portfolio page
     const currentHash = window.location.hash || "#home";
     if (currentHash.startsWith("#portfolio/seo")) {
-      const windowHeight = window.innerHeight;
-      
-      // If the scroll position is on the first page (less than window height minus header)
-      if (scrollPos < windowHeight - 120) {
-        document.body.classList.add("blank-page-active");
-      } else {
-        document.body.classList.remove("blank-page-active");
-      }
-
-      // Sync floating navigation widget active states
       updateFloatingNavHighlight(scrollPos);
-    } else {
-      document.body.classList.remove("blank-page-active");
     }
   });
 
@@ -141,14 +129,14 @@ document.addEventListener("DOMContentLoaded", () => {
     "#contact": renderContactPage
   };
 
-  function router() {
+  let lastRenderedRoute = null;
+
+  function router(options = {}) {
+    const isInitial = Boolean(options && options.isInitial);
     let hash = window.location.hash || "#home";
     
-    // Clear any previous route classes on body
-    document.body.className = "";
-    
-    // Smooth scroll back to top on route change
-    window.scrollTo(0, 0);
+    // Clear any previous route classes on body while keeping app-ready
+    document.body.className = "app-ready";
     
     // Handle parameterized routes like project navigation scrolls
     let cleanRoute = hash;
@@ -162,7 +150,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const parts = hash.split("#project-");
       cleanRoute = parts[0];
       param = parts[1];
+    } else if (hash.includes("#seo-portfolio-top") || hash.includes("#freelance-section-header")) {
+      const hashParts = hash.split("#");
+      cleanRoute = "#" + hashParts[1];
+      param = "__anchor__" + hashParts[2];
     }
+
+    // Smooth scroll back to top only on actual user route switches without a specific section anchor
+    if (!isInitial && !param && lastRenderedRoute !== cleanRoute) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    lastRenderedRoute = cleanRoute;
 
     // Call match route
     const renderFunc = routes[cleanRoute];
@@ -176,21 +174,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // Update active state in nav link layouts
     updateActiveNavLinks(cleanRoute);
     
-    // Scroll to project if parameterized
+    // Scroll to project or anchor if parameterized
     if (param && cleanRoute === "#portfolio/seo") {
-      setTimeout(() => {
-        const targetElement = document.getElementById(`project-${param}`);
+      const targetId = param.startsWith("__anchor__")
+        ? param.replace("__anchor__", "")
+        : `project-${param}`;
+      requestAnimationFrame(() => {
+        const targetElement = document.getElementById(targetId);
         if (targetElement) {
-          const headerOffset = 100;
+          const headerOffset = 90;
           const elementPosition = targetElement.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.scrollY - headerOffset;
           
           window.scrollTo({
-            top: offsetPosition,
+            top: Math.max(0, offsetPosition),
             behavior: "smooth"
           });
         }
-      }, 300);
+      });
     }
   }
 
@@ -219,8 +220,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Fetch CMS public data on startup, merging with default window.portfolioData if available
+  // Render immediately from static/cached data, then refresh silently from CMS API
   function initApp() {
+    let initialSnapshot = "";
+
+    try {
+      const cached = sessionStorage.getItem("portfolioDataCache");
+      if (cached) {
+        const parsedCache = JSON.parse(cached);
+        if (parsedCache && typeof parsedCache === "object") {
+          window.portfolioData = {
+            ...window.portfolioData,
+            ...parsedCache
+          };
+        }
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+
+    if (window.portfolioData && window.portfolioData.settings) {
+      updateWebsiteSettingsUI(window.portfolioData.settings, false);
+    }
+
+    initialSnapshot = JSON.stringify(window.portfolioData || {});
+
+    // Instant synchronous first render — main content renders immediately before footer
+    router({ isInitial: true });
+
+    // Non-blocking background sync with CMS API
     fetch("/api/public/data")
       .then(res => {
         if (!res.ok) throw new Error("Server offline");
@@ -228,56 +256,54 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .then(response => {
         if (response.success && response.data) {
-          console.log("CMS Data loaded dynamically from backend API.");
           const cmsData = response.data;
-          
-          // Merge dynamic data into window.portfolioData
-          window.portfolioData = {
+          const merged = {
             ...window.portfolioData,
             ...cmsData
           };
+          const nextSnapshot = JSON.stringify(merged);
 
-          // Dynamically update site settings on load (email, phone, footer descriptions, etc.)
-          updateWebsiteSettingsUI(cmsData.settings);
+          try {
+            sessionStorage.setItem("portfolioDataCache", JSON.stringify(cmsData));
+          } catch (e) {
+            // Ignore storage quota errors
+          }
+
+          if (nextSnapshot !== initialSnapshot) {
+            const preservedScrollY = window.scrollY;
+            window.portfolioData = merged;
+            updateWebsiteSettingsUI(cmsData.settings, false);
+            router({ isInitial: true });
+            if (preservedScrollY > 0) {
+              window.scrollTo(0, preservedScrollY);
+            }
+          }
         }
       })
       .catch(err => {
-        console.warn("CMS Connection bypassed. Defaulting to local static data.js assets.", err);
-        // Still apply default settings to the UI
-        if (window.portfolioData && window.portfolioData.settings) {
-          updateWebsiteSettingsUI(window.portfolioData.settings);
-        }
-      })
-      .finally(() => {
-        // Run router once database data load finishes
-        router();
+        console.warn("CMS sync skipped, using local portfolio data:", err);
       });
   }
 
   // Bind settings variables dynamically
-  function updateWebsiteSettingsUI(settings) {
+  function updateWebsiteSettingsUI(settings, refreshIcons = true) {
     if (!settings) return;
     
     // Update all direct email mailto links and labels
     document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
       link.href = `mailto:${settings.email}`;
-      if (link.textContent.includes("@") || link.textContent.includes("Email Me")) {
-        // Keep button text similar but swap dynamic label if it contains an @
-        if (link.textContent.includes("@")) {
-          link.textContent = settings.email;
-        }
+      if (link.textContent.includes("@")) {
+        link.textContent = settings.email;
       }
     });
 
     // Update all telephone links and labels
     document.querySelectorAll('a[href^="tel:"]').forEach(link => {
       link.href = `tel:${settings.phone}`;
-      if (link.textContent.match(/\d+/) || link.textContent.includes("Call:")) {
-        if (link.textContent.includes("Call:")) {
-          link.innerHTML = `<i data-lucide="phone"></i> Call: ${settings.phone}`;
-        } else {
-          link.textContent = settings.phone;
-        }
+      if (link.textContent.includes("Call:")) {
+        link.innerHTML = `<i data-lucide="phone"></i> Call: ${settings.phone}`;
+      } else if (link.textContent.match(/\d+/)) {
+        link.textContent = settings.phone;
       }
     });
 
@@ -287,14 +313,14 @@ document.addEventListener("DOMContentLoaded", () => {
       footerTagline.textContent = settings.footerDesc;
     }
     
-    if (typeof lucide !== "undefined") {
+    if (refreshIcons && typeof lucide !== "undefined") {
       lucide.createIcons();
     }
   }
 
-  // Listen to hash change and window load
-  window.addEventListener("hashchange", router);
-  window.addEventListener("load", initApp);
+  // Listen to hash change and start immediately on DOMContentLoaded
+  window.addEventListener("hashchange", () => router({ isInitial: false }));
+  initApp();
 
   /* ==========================================================================
      PAGE RENDER FUNCTIONS
@@ -306,7 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
     }
     setupScrollAnimations();
-    setupScreenshotClickHandlers();
     setupFaqAccordion();
   }
 
@@ -626,15 +651,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="browser-address">${proj.name.toLowerCase().replace(/\s+/g, '')}.com</div>
               </div>
-              <div class="browser-body screenshot-placeholder" data-project="${proj.name}" data-slot="wp" ${proj.image ? 'style="border:none; background:transparent;"' : ''}>
+              <div class="browser-body project-media-preview" data-project="${proj.name}" ${proj.image ? 'style="border:none; background:transparent;"' : ''}>
                 ${proj.image ? `
-                  <img src="${proj.image}" alt="${proj.name} preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
-                  <button class="screenshot-edit-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(15, 23, 42, 0.85); color: var(--color-white); border: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                    <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Change
-                  </button>
+                  <img src="${proj.image}" alt="${proj.name} preview" class="project-preview-img" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
                 ` : `
-                  <i data-lucide="plus" class="screenshot-placeholder-icon" style="color: var(--color-text-secondary); width: 32px; height: 32px; margin-bottom: 0.5rem;"></i>
-                  <span class="placeholder-label" style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">Add Website Preview</span>
+                  <div class="mockup-empty-preview">
+                    <i data-lucide="layout" class="mockup-preview-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem; opacity: 0.85;"></i>
+                    <span class="placeholder-label" style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">${proj.name} Live Showcase</span>
+                  </div>
                 `}
               </div>
             </div>
@@ -663,15 +687,14 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="software-btn maximize"></span>
             </div>
           </div>
-          <div class="software-body screenshot-placeholder" data-project="${proj.name}" data-slot="software" ${proj.image ? 'style="border:none; background:transparent;"' : ''}>
+          <div class="software-body project-media-preview" data-project="${proj.name}" ${proj.image ? 'style="border:none; background:transparent;"' : ''}>
             ${proj.image ? `
-              <img src="${proj.image}" alt="${proj.name} preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
-              <button class="screenshot-edit-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(15, 23, 42, 0.85); color: var(--color-white); border: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Change
-              </button>
+              <img src="${proj.image}" alt="${proj.name} preview" class="project-preview-img" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
             ` : `
-              <i data-lucide="plus" class="screenshot-placeholder-icon" style="color: var(--color-text-secondary); width: 32px; height: 32px; margin-bottom: 0.5rem;"></i>
-              <span class="placeholder-label" style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">Add Software Preview</span>
+              <div class="mockup-empty-preview">
+                <i data-lucide="terminal" class="mockup-preview-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem; opacity: 0.85;"></i>
+                <span class="placeholder-label" style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">${proj.name} Architecture</span>
+              </div>
             `}
           </div>
         </div>
@@ -685,15 +708,14 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="browser-address">${proj.name.toLowerCase().replace(/\s+/g, '')}.com</div>
           </div>
-          <div class="browser-body screenshot-placeholder" data-project="${proj.name}" data-slot="ai" ${proj.image ? 'style="border:none; background:transparent;"' : ''}>
+          <div class="browser-body project-media-preview" data-project="${proj.name}" ${proj.image ? 'style="border:none; background:transparent;"' : ''}>
             ${proj.image ? `
-              <img src="${proj.image}" alt="${proj.name} preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
-              <button class="screenshot-edit-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(15, 23, 42, 0.85); color: var(--color-white); border: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Change
-              </button>
+              <img src="${proj.image}" alt="${proj.name} preview" class="project-preview-img" loading="lazy" decoding="async" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
             ` : `
-              <i data-lucide="plus" class="screenshot-placeholder-icon" style="color: var(--color-text-secondary); width: 32px; height: 32px; margin-bottom: 0.5rem;"></i>
-              <span class="placeholder-label" style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">Add Website Preview</span>
+              <div class="mockup-empty-preview">
+                <i data-lucide="sparkles" class="mockup-preview-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem; opacity: 0.85;"></i>
+                <span class="placeholder-label" style="font-size: 0.85rem; font-weight: 600; color: var(--color-text-secondary);">${proj.name} Live Showcase</span>
+              </div>
             `}
           </div>
         </div>
@@ -985,111 +1007,229 @@ document.addEventListener("DOMContentLoaded", () => {
      ========================================================================== */
 
   function renderSEOPortfolio(paramProject = "") {
-    // Renders the main portfolio structure
-    // Includes:
-    // 1. One completely blank section at the very beginning (100vh)
-    // 2. Case study scroll sections
-    // 3. Freelancing section
-    // 4. Case study control elements (Prev/Next jumps)
-    
-    // Check if the current scroll position is on the first page to initialize blank page state
-    document.body.classList.add("blank-page-active");
+    const seoProjects = window.portfolioData.seoProjects || [];
+    const freelanceProjects = window.portfolioData.freelanceProjects || [];
 
-    const seoProjectsHTML = window.portfolioData.seoProjects.map((proj, index) => {
-      const nextProj = window.portfolioData.seoProjects[index + 1] || null;
-      const prevProj = window.portfolioData.seoProjects[index - 1] || null;
-      
+    const seoProjectsHTML = seoProjects.map((proj, index) => {
+      const nextProj = seoProjects[index + 1] || null;
+      const prevProj = seoProjects[index - 1] || null;
+      const hasOverview = Boolean(proj.overview);
+      const hasContributions = Array.isArray(proj.contributions) && proj.contributions.length > 0;
+      const hasAnalytics = proj.analyticsMetrics && Array.isArray(proj.analyticsMetrics.kpis) && proj.analyticsMetrics.kpis.length > 0;
+      const hasPagespeed = proj.pagespeed && Array.isArray(proj.pagespeed.scores) && proj.pagespeed.scores.length > 0;
+      const hasTools = Array.isArray(proj.toolsUsed) && proj.toolsUsed.length > 0;
+      const hasImages = Array.isArray(proj.images) && proj.images.filter(Boolean).length > 0;
+
+      const overviewHTML = hasOverview ? `
+        <div class="case-study-overview-card fade-up-element">
+          <h4 class="case-study-section-title" style="margin-bottom: 0.75rem;"><i data-lucide="file-text"></i> Project Overview</h4>
+          <p class="case-study-overview-text">${proj.overview}</p>
+          ${Array.isArray(proj.targetKeywords) && proj.targetKeywords.length > 0 ? `
+            <div class="keywords-highlight-row">
+              <span class="keywords-label">Target Keywords:</span>
+              ${proj.targetKeywords.map(kw => `<span class="keyword-chip">${kw}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : '';
+
+      const objectivesHTML = Array.isArray(proj.objectives) && proj.objectives.length > 0 ? `
+        <div class="fade-up-element" style="margin-bottom: 3rem;">
+          <h4 class="case-study-section-title"><i data-lucide="target"></i> ${hasOverview ? 'Objectives & Goals' : 'Project Objectives'}</h4>
+          <div class="objectives-grid">
+            ${proj.objectives.map(obj => `
+              <div class="objective-card">
+                <div class="objective-icon-wrapper">
+                  <i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div class="objective-text">${obj}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
+      const contributionsHTML = hasContributions ? `
+        <div class="fade-up-element" style="margin-bottom: 3rem;">
+          <h4 class="case-study-section-title"><i data-lucide="wrench"></i> Our Contributions & SEO Strategies</h4>
+          <div class="contributions-grid">
+            ${proj.contributions.map(group => `
+              <div class="contribution-card">
+                <div>
+                  <h5 class="contribution-card-title">
+                    <i data-lucide="${group.title.toLowerCase().includes('off-page') ? 'share-2' : 'search'}"></i>
+                    ${group.title}
+                  </h5>
+                  ${group.intro ? `<p class="contribution-intro">${group.intro}</p>` : ''}
+                  <div class="contribution-items-list">
+                    ${(group.items || []).map(item => `
+                      <div class="contribution-item">
+                        <strong>${item.label}:</strong> ${item.detail}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                ${group.result ? `
+                  <div class="contribution-result-callout">
+                    <strong>Result:</strong> ${group.result}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
+      const metricsCardsHTML = hasAnalytics ? `
+        <div class="metrics-dashboard-box">
+          <div class="metrics-source-label">
+            <i data-lucide="activity" style="width: 15px; height: 15px; color: var(--color-accent);"></i>
+            ${proj.analyticsMetrics.source || 'Verified Search Analytics'}
+          </div>
+          <div class="metrics-kpi-grid">
+            ${proj.analyticsMetrics.kpis.map(kpi => `
+              <div class="metric-kpi-card">
+                <div class="metric-kpi-label">${kpi.label}</div>
+                <div class="metric-kpi-value">${kpi.value}</div>
+                ${kpi.change ? `<span class="metric-kpi-change">${kpi.change}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
+      const pagespeedHTML = hasPagespeed ? `
+        <div class="metrics-dashboard-box">
+          <div class="metrics-source-label">
+            <i data-lucide="gauge" style="width: 15px; height: 15px; color: var(--color-success);"></i>
+            PageSpeed Insights (${proj.pagespeed.device || 'Mobile'})
+          </div>
+          <div class="pagespeed-grid">
+            ${proj.pagespeed.scores.map(item => `
+              <div class="pagespeed-card">
+                <div class="pagespeed-ring">${item.score}</div>
+                <span class="pagespeed-label">${item.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
+      const screenshotsHTML = hasImages ? `
+        <div class="screenshots-container">
+          ${proj.images.filter(Boolean).map((imgSrc, imgIdx) => `
+            <div class="screenshot-showcase" data-project="${proj.name}">
+              <img src="${imgSrc}" alt="${proj.name} verified analytics screenshot ${imgIdx + 1}" class="showcase-img" loading="lazy" decoding="async">
+            </div>
+          `).join('')}
+        </div>
+      ` : (!hasAnalytics && !hasPagespeed ? `
+        <div class="screenshots-container">
+          <div class="screenshot-showcase" data-project="${proj.name}">
+            <div class="case-study-verified-badge">
+              <i data-lucide="trending-up" class="screenshot-placeholder-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem;"></i>
+              <div class="screenshot-placeholder-title">Search Visibility Chart</div>
+              <div class="screenshot-placeholder-sub">Audited & Verified Performance</div>
+            </div>
+          </div>
+          <div class="screenshot-showcase" data-project="${proj.name}">
+            <div class="case-study-verified-badge">
+              <i data-lucide="check-circle-2" class="screenshot-placeholder-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem;"></i>
+              <div class="screenshot-placeholder-title">On-Page / Audit Score Report</div>
+              <div class="screenshot-placeholder-sub">Technical Health Verified</div>
+            </div>
+          </div>
+        </div>
+      ` : '');
+
+      const toolsHTML = hasTools ? `
+        <div class="fade-up-element">
+          <h4 class="case-study-section-title"><i data-lucide="cpu"></i> Tools Used</h4>
+          <div class="tools-used-box">
+            ${proj.toolsUsed.map(group => `
+              <div>
+                <div class="tools-group-title">${group.group}</div>
+                <div class="tools-badge-list">
+                  ${(group.tools || []).map(tool => `<span class="tool-badge">${tool}</span>`).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : '';
+
       return `
         <!-- Main Case Study Project Section -->
-        <section id="project-${proj.id}" class="section project-detail-section" style="border-bottom: 1px solid var(--color-border); padding: 120px 0;">
+        <section id="project-${proj.id}" class="section project-detail-section" style="border-bottom: 1px solid var(--color-border); padding: 90px 0;">
           <div class="container">
             
             <!-- Project Header -->
-            <div class="project-detail-header fade-up-element" style="margin-bottom: 3.5rem;">
+            <div class="project-detail-header fade-up-element" style="margin-bottom: 2.5rem;">
               <span class="badge"><i data-lucide="briefcase"></i> Case Study #${String(index + 1).padStart(2, '0')}</span>
               <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--color-navy);">${proj.name}</h2>
               
               <div class="case-study-meta-bar" style="margin-top: 1.5rem;">
-                <div class="case-study-meta-item">
-                  <i data-lucide="calendar"></i>
-                  <span>Duration: <strong>${proj.duration}</strong></span>
-                </div>
-                <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
-                  Visit Live Site <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
-                </a>
-              </div>
-            </div>
-
-            <!-- Objectives Grid -->
-            <div class="fade-up-element" style="margin-bottom: 3rem;">
-              <h4 class="case-study-section-title"><i data-lucide="target"></i> Project Objectives</h4>
-              <div class="objectives-grid">
-                ${proj.objectives.map(obj => `
-                  <div class="objective-card">
-                    <div class="objective-icon-wrapper">
-                      <i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i>
-                    </div>
-                    <div class="objective-text">${obj}</div>
+                ${proj.duration ? `
+                  <div class="case-study-meta-item">
+                    <i data-lucide="calendar"></i>
+                    <span>Duration: <strong>${proj.duration}</strong></span>
                   </div>
-                `).join('')}
+                ` : ''}
+                ${proj.domainAge ? `
+                  <div class="case-study-meta-item">
+                    <i data-lucide="clock"></i>
+                    <span>Domain Age: <strong>${proj.domainAge}</strong></span>
+                  </div>
+                ` : ''}
+                ${proj.website ? `
+                  <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
+                    Visit Live Site <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+                  </a>
+                ` : ''}
               </div>
             </div>
 
-            <!-- Work Completed Badges -->
-            <div class="work-completed-section fade-up-element">
-              <h4 class="case-study-section-title"><i data-lucide="layers"></i> Services Completed</h4>
-              <div class="work-completed-badges">
-                ${proj.workCompleted.map(tag => `
-                  <span class="work-completed-badge">${tag}</span>
-                `).join('')}
-              </div>
-            </div>
+            ${overviewHTML}
+            ${objectivesHTML}
+            ${contributionsHTML}
 
-            <!-- Results & Image Placeholders -->
+            ${Array.isArray(proj.workCompleted) && proj.workCompleted.length > 0 ? `
+              <!-- Work Completed Badges -->
+              <div class="work-completed-section fade-up-element">
+                <h4 class="case-study-section-title"><i data-lucide="layers"></i> Services Completed</h4>
+                <div class="work-completed-badges">
+                  ${proj.workCompleted.map(tag => `
+                    <span class="work-completed-badge">${tag}</span>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Results, Verified Metrics & Screenshots -->
             <div class="results-section fade-up-element">
               <div>
-                <h4 class="case-study-section-title"><i data-lucide="bar-chart-3"></i> Qualitative Improvements</h4>
+                <h4 class="case-study-section-title"><i data-lucide="bar-chart-3"></i> ${hasOverview ? 'Impact & Key Achievements' : 'Qualitative Improvements'}</h4>
                 <div class="results-list">
-                  ${proj.results.map(res => `
+                  ${(proj.results || []).map(res => `
                     <div class="result-item">
                       <i data-lucide="arrow-up-right" class="result-success-icon" style="width: 20px; height: 20px;"></i>
                       <div class="result-text">${res}</div>
                     </div>
                   `).join('')}
                 </div>
+                ${proj.impactSummary ? `<p class="impact-summary-note">${proj.impactSummary}</p>` : ''}
               </div>
               
-              <!-- Dotted Image Placeholder Card -->
+              <!-- Metrics Verification & Screenshots Display (Read-Only) -->
               <div>
-                <h4 class="case-study-section-title"><i data-lucide="image"></i> Project Metrics Verification</h4>
-                <div class="screenshots-container">
-                  <div class="screenshot-placeholder" data-project="${proj.name}" data-slot="1" ${proj.images && proj.images[0] ? 'style="border:none; background:transparent;"' : ''}>
-                    ${proj.images && proj.images[0] ? `
-                      <img src="${proj.images[0]}" alt="${proj.name} search visibility chart" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
-                      <button class="screenshot-edit-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(15, 23, 42, 0.85); color: var(--color-white); border: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                        <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Change
-                      </button>
-                    ` : `
-                      <i data-lucide="plus" class="screenshot-placeholder-icon"></i>
-                      <div class="screenshot-placeholder-title">Search Visibility Chart</div>
-                      <div class="screenshot-placeholder-sub">Click to select GA / Search Console Screenshot</div>
-                    `}
-                  </div>
-                  <div class="screenshot-placeholder" data-project="${proj.name}" data-slot="2" ${proj.images && proj.images[1] ? 'style="border:none; background:transparent;"' : ''}>
-                    ${proj.images && proj.images[1] ? `
-                      <img src="${proj.images[1]}" alt="${proj.name} audit score report" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
-                      <button class="screenshot-edit-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(15, 23, 42, 0.85); color: var(--color-white); border: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                        <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Change
-                      </button>
-                    ` : `
-                      <i data-lucide="plus" class="screenshot-placeholder-icon"></i>
-                      <div class="screenshot-placeholder-title">On-Page / Audit Score Report</div>
-                      <div class="screenshot-placeholder-sub">Click to select Audit/Keyword report screenshot</div>
-                    `}
-                  </div>
-                </div>
+                <h4 class="case-study-section-title"><i data-lucide="shield-check"></i> Project Metrics & Screenshots</h4>
+                ${metricsCardsHTML}
+                ${pagespeedHTML}
+                ${screenshotsHTML}
               </div>
             </div>
+
+            ${toolsHTML}
 
             <hr class="case-study-divider">
 
@@ -1102,7 +1242,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </a>
               ` : `<div></div>`}
 
-              <a href="#portfolio/seo#seo-blank-page" class="back-to-portfolio-btn">
+              <a href="#portfolio/seo#seo-portfolio-top" class="back-to-portfolio-btn">
                 <i data-lucide="arrow-up"></i> Back to Top
               </a>
 
@@ -1125,13 +1265,14 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }).join('');
 
-    const freelanceProjectsHTML = window.portfolioData.freelanceProjects.map((proj, index) => {
-      const nextProj = window.portfolioData.freelanceProjects[index + 1] || null;
-      const prevProj = window.portfolioData.freelanceProjects[index - 1] || null;
+    const freelanceProjectsHTML = freelanceProjects.map((proj, index) => {
+      const nextProj = freelanceProjects[index + 1] || null;
+      const prevProj = freelanceProjects[index - 1] || null;
+      const lastSeo = seoProjects[seoProjects.length - 1];
       
       return `
         <!-- Freelancing Project Section -->
-        <section id="project-${proj.id}" class="section project-detail-section freelance-section" style="border-bottom: 1px solid var(--color-border); padding: 100px 0;">
+        <section id="project-${proj.id}" class="section project-detail-section freelance-section" style="border-bottom: 1px solid var(--color-border); padding: 90px 0;">
           <div class="container">
             
             <!-- Project Header -->
@@ -1144,9 +1285,11 @@ document.addEventListener("DOMContentLoaded", () => {
                   <i data-lucide="calendar"></i>
                   <span>Duration: <strong>${proj.duration}</strong></span>
                 </div>
-                <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
-                  Visit Live Site <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
-                </a>
+                ${proj.website ? `
+                  <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
+                    Visit Live Site <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+                  </a>
+                ` : ''}
               </div>
             </div>
 
@@ -1154,7 +1297,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="fade-up-element" style="margin-bottom: 2.5rem;">
               <h4 class="case-study-section-title"><i data-lucide="target"></i> Project Objectives</h4>
               <div class="objectives-grid">
-                ${proj.objectives.map(obj => `
+                ${(proj.objectives || []).map(obj => `
                   <div class="objective-card" style="border-left: 3px solid var(--color-orange)">
                     <div class="objective-icon-wrapper">
                       <i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i>
@@ -1169,18 +1312,18 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="work-completed-section fade-up-element">
               <h4 class="case-study-section-title"><i data-lucide="layers"></i> Services Completed</h4>
               <div class="work-completed-badges">
-                ${proj.workCompleted.map(tag => `
+                ${(proj.workCompleted || []).map(tag => `
                   <span class="work-completed-badge" style="background-color: var(--color-orange);">${tag}</span>
                 `).join('')}
               </div>
             </div>
 
-            <!-- Results & Image Placeholders -->
+            <!-- Results & Citation Verification -->
             <div class="results-section fade-up-element" style="margin-top: 3rem;">
               <div>
                 <h4 class="case-study-section-title"><i data-lucide="bar-chart-3"></i> Qualitative Improvements</h4>
                 <div class="results-list">
-                  ${proj.results.map(res => `
+                  ${(proj.results || []).map(res => `
                     <div class="result-item">
                       <i data-lucide="arrow-up-right" class="result-success-icon" style="width: 20px; height: 20px;"></i>
                       <div class="result-text">${res}</div>
@@ -1189,14 +1332,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
               
-              <!-- Dotted Image Placeholder Card -->
+              <!-- Citation Verification Display (Read-Only) -->
               <div>
-                <h4 class="case-study-section-title"><i data-lucide="image"></i> Citation Verification</h4>
+                <h4 class="case-study-section-title"><i data-lucide="shield-check"></i> Citation Verification</h4>
                 <div class="screenshots-container">
-                  <div class="screenshot-placeholder" data-project="${proj.name}" data-slot="1">
-                    <i data-lucide="plus" class="screenshot-placeholder-icon"></i>
-                    <div class="screenshot-placeholder-title">Listing Citation Screenshot</div>
-                    <div class="screenshot-placeholder-sub">Click to select active citation screenshot</div>
+                  <div class="screenshot-showcase" data-project="${proj.name}">
+                    <div class="case-study-verified-badge">
+                      <i data-lucide="map-pin" class="screenshot-placeholder-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem;"></i>
+                      <div class="screenshot-placeholder-title">Listing Citation Record</div>
+                      <div class="screenshot-placeholder-sub">Directory Placement Verified</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1211,15 +1356,14 @@ document.addEventListener("DOMContentLoaded", () => {
                   <span class="project-nav-label">Previous Citation</span>
                   <span class="project-nav-link-btn"><i data-lucide="arrow-left"></i> ${prevProj.name}</span>
                 </a>
-              ` : `
-                <!-- link back to case studies when starting citations -->
-                <a href="#portfolio/seo#project-${window.portfolioData.seoProjects[window.portfolioData.seoProjects.length - 1].id}" class="project-nav-btn prev">
+              ` : (lastSeo ? `
+                <a href="#portfolio/seo#project-${lastSeo.id}" class="project-nav-btn prev">
                   <span class="project-nav-label">Previous Case Study</span>
-                  <span class="project-nav-link-btn"><i data-lucide="arrow-left"></i> Case Study #09</span>
+                  <span class="project-nav-link-btn"><i data-lucide="arrow-left"></i> ${lastSeo.name}</span>
                 </a>
-              `}
+              ` : `<div></div>`)}
 
-              <a href="#portfolio/seo#seo-blank-page" class="back-to-portfolio-btn">
+              <a href="#portfolio/seo#seo-portfolio-top" class="back-to-portfolio-btn">
                 <i data-lucide="arrow-up"></i> Back to Top
               </a>
 
@@ -1229,7 +1373,6 @@ document.addEventListener("DOMContentLoaded", () => {
                   <span class="project-nav-link-btn">${nextProj.name} <i data-lucide="arrow-right"></i></span>
                 </a>
               ` : `
-                <!-- finished all projects -->
                 <a href="#contact" class="project-nav-btn next">
                   <span class="project-nav-label">Finish Portfolio</span>
                   <span class="project-nav-link-btn">Contact Me <i data-lucide="message-square"></i></span>
@@ -1243,9 +1386,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }).join('');
 
     appContent.innerHTML = `
-      <!-- 1. The Blank First Page -->
-      <section class="seo-portfolio-blank-screen" id="seo-blank-page">
-        <!-- Kept intentionally empty with no text or header/footer elements -->
+      <!-- SEO Portfolio Header & Quick Navigation -->
+      <section id="seo-portfolio-top" class="portfolio-header bg-grid-pattern" style="padding-top: 140px; padding-bottom: 60px; border-bottom: 1px solid var(--color-border);">
+        <div class="container fade-up-element">
+          <span class="badge"><i data-lucide="trending-up"></i> SEO Case Studies</span>
+          <h1 style="margin-top: 1rem;">SEO Portfolio & Results</h1>
+          <p class="portfolio-header-p">Data-driven On-Page, Technical, and Off-Page SEO campaigns focused on organic traffic growth, search visibility, and keyword rankings.</p>
+          <div class="seo-quick-jump-bar">
+            ${seoProjects.map((p, i) => `
+              <a href="#portfolio/seo#project-${p.id}" class="seo-jump-pill ${i < 2 ? 'featured' : ''}">
+                #${String(i + 1).padStart(2, '0')} ${p.name}
+              </a>
+            `).join('')}
+            ${freelanceProjects.length > 0 ? `
+              <a href="#portfolio/seo#freelance-section-header" class="seo-jump-pill">
+                Freelancing & Citations (${freelanceProjects.length})
+              </a>
+            ` : ''}
+          </div>
+        </div>
       </section>
 
       <!-- Scrollable Projects Body -->
@@ -1255,11 +1414,11 @@ document.addEventListener("DOMContentLoaded", () => {
         ${seoProjectsHTML}
 
         <!-- Subsection Header for Freelance projects -->
-        <div id="freelance-section-header" style="background-color: var(--color-navy); padding: 80px 0; color: var(--color-white); text-align: center;">
+        <div id="freelance-section-header" style="background-color: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border); padding: 80px 0; text-align: center;">
           <div class="container fade-up-element">
-            <span class="badge" style="background-color: var(--color-orange); color: var(--color-white); border-color: var(--color-orange);">Additional Records</span>
-            <h2 style="color: var(--color-white); margin-top: 1rem; margin-bottom: 0.5rem;">Freelancing Projects</h2>
-            <p style="color: rgba(248, 250, 252, 0.7); max-width: 600px; margin: 0 auto;">Review local business listing acquisitions, citation audits, and social backlink directories completed as external digital marketing contracts.</p>
+            <span class="badge">Additional Records</span>
+            <h2 style="margin-top: 1rem; margin-bottom: 0.5rem;">Freelancing Projects</h2>
+            <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto;">Review local business listing acquisitions, citation audits, and social backlink directories completed as external digital marketing contracts.</p>
           </div>
         </div>
 
@@ -1269,7 +1428,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       <!-- Floating Jump-to Project Menu Widget -->
       <div id="floating-case-navigator" class="floating-case-nav">
-        <!-- Floating Navigation Button lists -->
         <button class="float-nav-btn" id="float-nav-prev-btn" title="Previous Project"><i data-lucide="chevron-up"></i></button>
         <button class="float-nav-btn" id="float-nav-list-btn" title="Jump to Index"><i data-lucide="list"></i></button>
         <button class="float-nav-btn" id="float-nav-next-btn" title="Next Project"><i data-lucide="chevron-down"></i></button>
@@ -1279,11 +1437,11 @@ document.addEventListener("DOMContentLoaded", () => {
       <div id="floating-index-overlay" style="display: none; position: fixed; bottom: 6.5rem; right: 2rem; background-color: var(--color-white); border: 1px solid var(--color-border); padding: 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 910; width: 280px; max-height: 380px; overflow-y: auto;">
         <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--color-orange); border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">Portfolio Contents</h4>
         <ul style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem;">
-          ${window.portfolioData.seoProjects.map((p, i) => `
+          ${seoProjects.map((p, i) => `
             <li><a href="#portfolio/seo#project-${p.id}" style="font-weight:600; display:block; padding: 0.25rem 0;" class="index-jump-link">Case #${i+1}: ${p.name}</a></li>
           `).join('')}
           <li style="border-top: 1px solid var(--color-border); padding-top: 0.5rem; margin-top: 0.5rem; font-weight: 700; color: var(--color-navy);">Freelance Projects</li>
-          ${window.portfolioData.freelanceProjects.map((p, i) => `
+          ${freelanceProjects.map((p, i) => `
             <li><a href="#portfolio/seo#project-${p.id}" style="font-weight:600; display:block; padding: 0.25rem 0;" class="index-jump-link">Citations: ${p.name}</a></li>
           `).join('')}
         </ul>
@@ -1294,6 +1452,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     afterRenderSetup();
     setupFloatingNavigator();
+    setupImageLightbox();
   }
 
   /* ==========================================================================
@@ -1302,21 +1461,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderProjectCard(proj, type) {
     // Generate tag badges from first 2 tags
-    const tagsHTML = proj.workCompleted.slice(0, 2).map(tag => `
+    const tagsHTML = (proj.workCompleted || []).slice(0, 2).map(tag => `
       <span class="project-card-tag">${tag}</span>
     `).join('');
+    const displayUrl = (proj.website || "").replace(/^https?:\/\//, "").replace(/^www\./, "");
 
     return `
       <div class="project-card fade-up-element ${type === 'freelance' ? 'freelance-card' : ''}">
         <div class="project-card-header">
           <h3 class="project-card-name">${proj.name}</h3>
-          <span class="project-card-url">${proj.website.replace("https://", "").replace("www.", "")}</span>
+          <span class="project-card-url">${displayUrl}</span>
         </div>
         <div class="project-card-body">
           <div>
             <div class="project-card-duration">
               <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-              <span>Duration: ${proj.duration}</span>
+              <span>Duration: ${proj.duration || "Ongoing"}</span>
             </div>
             <div class="project-card-tags">
               ${tagsHTML}
@@ -1400,12 +1560,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Cache list of project elements
     projectSections = [
-      document.getElementById("seo-blank-page"),
+      document.getElementById("seo-portfolio-top"),
       ...Array.from(document.querySelectorAll(".project-detail-section"))
     ].filter(el => el !== null);
 
     // Initial show/hide of floating nav based on window position
-    if (window.scrollY > window.innerHeight - 100) {
+    if (window.scrollY > 220) {
       floatingNav.classList.add("visible");
     }
 
@@ -1426,10 +1586,14 @@ document.addEventListener("DOMContentLoaded", () => {
       indexOverlay.style.display = isVisible ? "none" : "block";
     });
 
-    // Close overlay on document click
-    document.addEventListener("click", () => {
-      indexOverlay.style.display = "none";
-    });
+    // Close overlay on document click (bind once)
+    if (!document.body.dataset.floatingOverlayBound) {
+      document.body.dataset.floatingOverlayBound = "true";
+      document.addEventListener("click", () => {
+        const activeOverlay = document.getElementById("floating-index-overlay");
+        if (activeOverlay) activeOverlay.style.display = "none";
+      });
+    }
 
     // Jump links click inside index
     indexOverlay.querySelectorAll(".index-jump-link").forEach(link => {
@@ -1470,90 +1634,89 @@ document.addEventListener("DOMContentLoaded", () => {
     const floatingNav = document.getElementById("floating-case-navigator");
     if (!floatingNav) return;
 
-    // Show floating navigator once we scroll past the blank page
-    if (scrollPos > window.innerHeight - 150) {
+    // Show floating navigator once user scrolls past the top header
+    if (scrollPos > 220) {
       floatingNav.classList.add("visible");
     } else {
       floatingNav.classList.remove("visible");
     }
   }
 
+  function setupImageLightbox() {
+    document.querySelectorAll(".showcase-img").forEach(img => {
+      img.addEventListener("click", () => {
+        const overlay = document.createElement("div");
+        overlay.className = "image-lightbox-overlay";
+        overlay.innerHTML = `
+          <button class="image-lightbox-close" aria-label="Close screenshot preview">
+            <i data-lucide="x"></i>
+          </button>
+          <img src="${img.src}" alt="${img.alt}">
+        `;
+        document.body.appendChild(overlay);
+        if (typeof lucide !== "undefined") {
+          lucide.createIcons({ node: overlay });
+        }
+        const closeLightbox = () => overlay.remove();
+        overlay.querySelector(".image-lightbox-close").addEventListener("click", closeLightbox);
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeLightbox();
+        });
+      });
+    });
+  }
+
   /* ==========================================================================
-     SCROLL FADE-UP INTERSECTION OBSERVER
+     SCROLL FADE-UP & STAGGER INTERSECTION OBSERVER
      ========================================================================== */
 
   function setupScrollAnimations() {
-    const elementsToAnimate = document.querySelectorAll(".fade-up-element");
+    const elementsToAnimate = document.querySelectorAll(".fade-up-element, .reveal-on-scroll");
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
     
     const observerOptions = {
       root: null,
-      rootMargin: "0px",
-      threshold: 0.1
+      rootMargin: "0px 0px -30px 0px",
+      threshold: 0.05
     };
 
-    const observer = new IntersectionObserver((entries, observer) => {
+    const observer = new IntersectionObserver((entries, obs) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add("visible");
-          observer.unobserve(entry.target); // Trigger once
+          obs.unobserve(entry.target);
         }
       });
     }, observerOptions);
 
-    elementsToAnimate.forEach(element => {
+    elementsToAnimate.forEach((element, idx) => {
+      const rect = element.getBoundingClientRect();
+      // Reveal above-the-fold elements immediately on render so first paint never stalls
+      if (rect.top < viewportHeight + 40) {
+        element.classList.add("visible");
+        return;
+      }
+
+      if (element.parentElement && (
+        element.parentElement.classList.contains("services-grid") || 
+        element.parentElement.classList.contains("testimonials-grid") || 
+        element.parentElement.classList.contains("contact-cards-grid") ||
+        element.parentElement.classList.contains("results-list")
+      )) {
+        const staggerIdx = (idx % 4) + 1;
+        if (!element.classList.contains(`stagger-${staggerIdx}`)) {
+          element.classList.add(`stagger-${staggerIdx}`);
+        }
+      }
       observer.observe(element);
     });
   }
 
   /* ==========================================================================
-     CONTACT FORM SUBMISSION HANDLER
-     ========================================================================== */  // Contact Form submission handler and toasts removed since form is replaced by direct options. }
-
-  /* ==========================================================================
-     MOCK SCREENSHOT CLICK REPLACEMENT HANDLERS
+     PROJECT MEDIA SHOWCASE (STRICTLY READ-ONLY ON PUBLIC SITE)
      ========================================================================== */
-
-  function setupScreenshotClickHandlers() {
-    document.querySelectorAll(".screenshot-placeholder").forEach(placeholder => {
-      placeholder.addEventListener("click", () => {
-        const projName = placeholder.getAttribute("data-project");
-        const slot = placeholder.getAttribute("data-slot");
-        
-        // Premium interactive input dialog
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        
-        input.onchange = (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              // Replace placeholder with chosen image
-              placeholder.style.border = "none";
-              placeholder.style.backgroundColor = "transparent";
-              placeholder.innerHTML = `
-                <img src="${event.target.result}" alt="${projName} screenshot slot ${slot}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
-                <button class="screenshot-edit-btn" style="position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(15, 23, 42, 0.85); color: var(--color-white); border: none; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
-                  <i data-lucide="edit-3" style="width: 12px; height: 12px;"></i> Change
-                </button>
-              `;
-              lucide.createIcons();
-              
-              // Enable re-clicking edit button to trigger another file pick
-              placeholder.querySelector(".screenshot-edit-btn").addEventListener("click", (evt) => {
-                evt.stopPropagation(); // Avoid double click trigger
-                input.click();
-              });
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-        
-        input.click();
-      });
-    });
-  }
+  // Normal visitors can only view portfolio media. All asset uploads are
+  // authenticated and managed exclusively via the /admin panel.
 
   function setupFaqAccordion() {
     const faqItems = document.querySelectorAll(".faq-item");

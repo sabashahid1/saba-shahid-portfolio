@@ -17,10 +17,15 @@ app.use(express.json());
 
 // Stateless Session Management (JWT using native crypto)
 const SESSION_SECRET = process.env.SESSION_SECRET || "saba-shahid-default-secure-session-key-2026";
+const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function createToken(payload) {
+  const tokenPayload = {
+    ...payload,
+    exp: Date.now() + TOKEN_EXPIRY_MS
+  };
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
-  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const data = Buffer.from(JSON.stringify(tokenPayload)).toString("base64url");
   const signature = crypto
     .createHmac("sha256", SESSION_SECRET)
     .update(`${header}.${data}`)
@@ -30,13 +35,28 @@ function createToken(payload) {
 
 function verifyToken(token) {
   try {
-    const [header, data, signature] = token.split(".");
+    if (!token || typeof token !== "string") return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const [header, data, signature] = parts;
+
     const expectedSignature = crypto
       .createHmac("sha256", SESSION_SECRET)
       .update(`${header}.${data}`)
       .digest("base64url");
-    if (signature !== expectedSignature) return null;
-    return JSON.parse(Buffer.from(data, "base64url").toString("utf8"));
+
+    const sigBuf = Buffer.from(signature);
+    const expectedBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      return null;
+    }
+
+    const payload = JSON.parse(Buffer.from(data, "base64url").toString("utf8"));
+    if (!payload || !payload.user) return null;
+    if (payload.exp && Date.now() > payload.exp) {
+      return null; // Expired token
+    }
+    return payload;
   } catch (e) {
     return null;
   }
@@ -69,26 +89,40 @@ function requireAuth(req, res, next) {
 }
 
 // --------------------------------------------------------------------------
-// STATIC FILE SERVING
+// STATIC FILE SERVING - STRICTLY PUBLIC ASSETS ONLY
 // --------------------------------------------------------------------------
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use(express.static(__dirname));
+app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: "1h", etag: true }));
+app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: "1h", etag: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "1d", etag: true }));
+
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "admin.html"));
 });
 
 // --------------------------------------------------------------------------
-// MEDIA UPLOAD SETUP (MULTER - IN-MEMORY)
+// MEDIA UPLOAD SETUP (MULTER - IN-MEMORY WITH STRICT VALIDATION)
 // --------------------------------------------------------------------------
 const storage = multer.memoryStorage();
 
+const ALLOWED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".mp4", ".webm"]);
+const ALLOWED_MIMES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/webm"
+]);
+
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "video/mp4", "video/webm"];
-  if (allowedTypes.includes(file.mimetype.toLowerCase())) {
+  const ext = path.extname(file.originalname || "").toLowerCase();
+  const mime = (file.mimetype || "").toLowerCase();
+  if (ALLOWED_EXTENSIONS.has(ext) && ALLOWED_MIMES.has(mime)) {
     cb(null, true);
   } else {
-    cb(new Error("Invalid file type. Only JPG, JPEG, PNG, WEBP, and MP4/WEBM are allowed."));
+    cb(new Error("Invalid file type. Only JPG, PNG, WEBP, and MP4/WEBM are allowed."));
   }
 };
 
@@ -104,6 +138,7 @@ const upload = multer({
 app.get("/api/public/data", async (req, res) => {
   try {
     const publicData = await db.getPublicData();
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
     res.status(200).json({ success: true, data: publicData });
   } catch (error) {
     console.error("Public fetch failed:", error);
@@ -394,9 +429,10 @@ app.post("/api/admin/media/upload", requireAuth, upload.single("file"), async (r
 
   try {
     let fileInfo = {};
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(req.file.originalname).toLowerCase();
-    const filename = req.file.fieldname + "-" + uniqueSuffix + ext;
+    const safeExt = ALLOWED_EXTENSIONS.has(ext) ? ext : ".png";
+    const uniqueSuffix = Date.now() + "-" + crypto.randomBytes(8).toString("hex");
+    const filename = "media-" + uniqueSuffix + safeExt;
 
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       const { put } = require("@vercel/blob");
@@ -454,6 +490,18 @@ app.delete("/api/admin/media/:id", requireAuth, async (req, res) => {
   } else {
     res.status(500).json({ success: false, message: "Failed to delete media item." });
   }
+});
+
+// Multer error handling middleware
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || (err && err.message && err.message.includes("Invalid file type"))) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  if (err) {
+    console.error("Server error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+  next();
 });
 
 // --------------------------------------------------------------------------

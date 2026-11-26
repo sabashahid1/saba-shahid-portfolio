@@ -265,6 +265,7 @@ async function read() {
 // Write database
 async function write(data) {
   await init();
+  publicDataCache = null; // Invalidate public API cache on any write
 
   if (process.env.MONGODB_URI) {
     try {
@@ -299,14 +300,65 @@ async function write(data) {
   }
 }
 
+// Short-lived in-memory cache for fast public API responses (invalidated on writes)
+let publicDataCache = null;
+let publicDataCacheTime = 0;
+const PUBLIC_CACHE_TTL_MS = 30 * 1000;
+
+/**
+ * Enrich live DB SEO projects with structured PDF case study fields from defaultData
+ * when those fields are missing or empty (e.g. already-seeded production DBs),
+ * while preserving admin-uploaded images and custom non-empty overrides.
+ */
+function enrichSeoProjects(projects) {
+  const seedById = new Map((defaultData.seoProjects || []).map(p => [p.id, p]));
+  return projects.map(proj => {
+    const seed = seedById.get(proj.id);
+    if (!seed) return proj;
+
+    const merged = { ...seed, ...proj };
+    const isLegacyBlank = !proj.website && (!proj.objectives || proj.objectives.length === 0);
+
+    if (isLegacyBlank || !proj.overview) {
+      merged.name = seed.name;
+      merged.website = proj.website || seed.website;
+      merged.duration = (!proj.duration || proj.duration === "3 Months" || proj.duration === "4 Months") && seed.overview ? seed.duration : (proj.duration || seed.duration);
+      merged.workCompleted = (proj.workCompleted && proj.workCompleted.length > 0 && proj.overview) ? proj.workCompleted : seed.workCompleted;
+      merged.objectives = (proj.objectives && proj.objectives.length > 0 && proj.overview) ? proj.objectives : seed.objectives;
+      merged.results = (proj.results && proj.results.length > 0 && proj.overview) ? proj.results : seed.results;
+      merged.overview = proj.overview || seed.overview;
+      merged.domainAge = proj.domainAge || seed.domainAge;
+      merged.targetKeywords = proj.targetKeywords || seed.targetKeywords;
+      merged.contributions = proj.contributions || seed.contributions;
+      merged.impactSummary = proj.impactSummary || seed.impactSummary;
+      merged.analyticsMetrics = proj.analyticsMetrics || seed.analyticsMetrics;
+      merged.pagespeed = proj.pagespeed || seed.pagespeed;
+      merged.toolsUsed = proj.toolsUsed || seed.toolsUsed;
+    }
+
+    // Preserve admin-uploaded screenshots if present; otherwise fall back to seed images
+    merged.images = (proj.images && proj.images.length > 0) ? proj.images : (seed.images || []);
+    return merged;
+  });
+}
+
 // Exported controllers
 module.exports = {
   // Public data dump for the frontend SPA
   async getPublicData() {
+    const now = Date.now();
+    if (publicDataCache && (now - publicDataCacheTime) < PUBLIC_CACHE_TTL_MS) {
+      return publicDataCache;
+    }
+
     const db = await read();
-    return {
+    const seoProjects = enrichSeoProjects(
+      (db.seoProjects || []).filter(p => p.status === "Published").sort((a, b) => a.order - b.order)
+    );
+
+    publicDataCache = {
       settings: db.settings,
-      seoProjects: (db.seoProjects || []).filter(p => p.status === "Published").sort((a, b) => a.order - b.order),
+      seoProjects,
       freelanceProjects: (db.freelanceProjects || []).filter(p => p.status === "Published").sort((a, b) => a.order - b.order),
       wordpressProjects: (db.wordpressProjects || []).filter(p => p.status === "Published").sort((a, b) => a.order - b.order),
       aiProjects: (db.aiProjects || []).filter(p => p.status === "Published").sort((a, b) => a.order - b.order),
@@ -314,6 +366,8 @@ module.exports = {
       testimonials: (db.testimonials || []).filter(t => t.status === "Published").sort((a, b) => a.order - b.order),
       faqs: (db.faqs || []).filter(f => f.status === "Published").sort((a, b) => a.order - b.order)
     };
+    publicDataCacheTime = now;
+    return publicDataCache;
   },
 
   // Auth Operations
