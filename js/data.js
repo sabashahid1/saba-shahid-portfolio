@@ -10,17 +10,19 @@ const portfolioData = {
     {
       id: "food-copycat",
       name: "FoodCopycat.com",
+      niche: "Food & Copycat Recipes Blog",
       website: "https://foodcopycat.com/",
       workCompleted: [
         "Local SEO & On-Page SEO",
         "Technical SEO",
         "Off-Page SEO",
         "Keyword & Content Optimization",
-        "Blog Writing & Link Building"
+        "Link Building & Outreach"
       ],
       duration: "August 2025 – Present",
-      domainAge: "Launched in August 2025",
-      overview: "FoodCopycat.com is a blogging website focused on Copycat recipes and cooking tips. The website aims to provide valuable, high-quality content to its audience while improving organic search visibility and user engagement. Since its launch in August 2025, the site has focused on delivering informative and engaging content that ranks well on Google and keeps users coming back.",
+      domainAge: "Launched August 2025",
+      summary: "Full-stack launch SEO (On-Page, Technical & Off-Page) driving first-page Google rankings and 17K+ impressions.",
+      overview: "FoodCopycat.com is a copycat recipes and cooking tips blog launched in August 2025, scaled with on-page, technical, and off-page SEO.",
       targetKeywords: [
         "Omakase Sauce",
         "Cajun Burger",
@@ -111,13 +113,23 @@ const portfolioData = {
           tools: ["SEMrush", "Ubersuggest", "Keyword Surfer"]
         }
       ],
+      gallery: [
+        { src: "/assets/seo/foodcopycat-site.png", label: "Live Website Preview" },
+        { src: "/assets/seo/foodcopycat-analytics.png", label: "Search Analytics (17K Impressions)" },
+        { src: "/assets/seo/foodcopycat-pagespeed.png", label: "PageSpeed Mobile (96 Performance)" },
+        { src: "/assets/seo/foodcopycat-gsc.png", label: "Google Search Console (3.53K Impressions)" }
+      ],
       images: [
-        "/uploads/file-1787648456689-603532847.png"
+        "/assets/seo/foodcopycat-site.png",
+        "/assets/seo/foodcopycat-analytics.png",
+        "/assets/seo/foodcopycat-pagespeed.png",
+        "/assets/seo/foodcopycat-gsc.png"
       ]
     },
     {
       id: "66-marketings",
       name: "66marketings.com",
+      niche: "E-Commerce & Digital Marketing Agency",
       website: "https://66marketings.com/",
       workCompleted: [
         "On-Page SEO & Local Optimization",
@@ -127,7 +139,8 @@ const portfolioData = {
         "Backlink Building & Outreach"
       ],
       duration: "December 2023 – August 2024",
-      overview: "66marketings.com is an e-commerce agency website that offers digital marketing solutions to businesses seeking to improve their online presence. From December 2023 to August 2024, the website focused on attracting relevant traffic, improving search visibility, and providing a seamless experience for users looking for marketing services.",
+      summary: "End-to-end agency SEO campaign lifting service page rankings, domain authority, and Google Search Console clicks.",
+      overview: "66marketings.com is an e-commerce digital marketing agency optimized from Dec 2023 to Aug 2024 to grow qualified organic search traffic.",
       objectives: [
         "Attract relevant organic traffic and improve search engine visibility for digital marketing service offerings.",
         "Identify high-traffic, relevant keywords and integrate them into service pages, blog posts, and meta descriptions.",
@@ -190,7 +203,14 @@ const portfolioData = {
           { label: "Average Position", value: "14.3" }
         ]
       },
-      images: []
+      gallery: [
+        { src: "/assets/seo/66marketings-site.png", label: "Live Website Preview" },
+        { src: "/assets/seo/66marketings-gsc.png", label: "Google Search Console (269 Clicks, 7.92K Impressions)" }
+      ],
+      images: [
+        "/assets/seo/66marketings-site.png",
+        "/assets/seo/66marketings-gsc.png"
+      ]
     },
     {
       id: "campagne-sms",

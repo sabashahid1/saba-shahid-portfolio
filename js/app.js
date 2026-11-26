@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const parts = hash.split("#project-");
       cleanRoute = parts[0];
       param = parts[1];
-    } else if (hash.includes("#seo-portfolio-top") || hash.includes("#freelance-section-header")) {
+    } else if (hash.startsWith("#portfolio/seo#")) {
       const hashParts = hash.split("#");
       cleanRoute = "#" + hashParts[1];
       param = "__anchor__" + hashParts[2];
@@ -1003,456 +1003,500 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==========================================================================
-     SEO PORTFOLIO SCROLLING DOCUMENT & MULTI-CASE STUDY VIEW
+     SEO PORTFOLIO — AGENCY CASE STUDY & PERFORMANCE VIEW
      ========================================================================== */
+
+  const SEO_NICHE_MAP = {
+    "food-copycat": "Food & Copycat Recipes Blog",
+    "66-marketings": "E-Commerce & Digital Marketing Agency",
+    "campagne-sms": "SMS Marketing SaaS (France)",
+    "auto-wert-direkt": "Automotive Valuation (Germany)",
+    "cyta-tech": "Technology & Digital Solutions",
+    "salt-mud": "Wellness & Beauty E-Commerce",
+    "heartspace-publications": "Digital Publishing & Editorial",
+    "usa-nova-glow": "Shopify Beauty & Skincare Store",
+    "khaleej-tip": "Regional Business & News Portal",
+    "encharge-capital": "Financial Services (Australia)",
+    "hire-a-painter": "Home Improvement & Painting",
+    "urban-contractors-nyc": "Construction & Contracting (NYC)",
+    "lenehans-bar": "Hospitality & Entertainment"
+  };
 
   function renderSEOPortfolio(paramProject = "") {
     const seoProjects = window.portfolioData.seoProjects || [];
     const freelanceProjects = window.portfolioData.freelanceProjects || [];
 
-    const seoProjectsHTML = seoProjects.map((proj, index) => {
-      const nextProj = seoProjects[index + 1] || null;
-      const prevProj = seoProjects[index - 1] || null;
-      const hasOverview = Boolean(proj.overview);
-      const hasContributions = Array.isArray(proj.contributions) && proj.contributions.length > 0;
-      const hasAnalytics = proj.analyticsMetrics && Array.isArray(proj.analyticsMetrics.kpis) && proj.analyticsMetrics.kpis.length > 0;
-      const hasPagespeed = proj.pagespeed && Array.isArray(proj.pagespeed.scores) && proj.pagespeed.scores.length > 0;
-      const hasTools = Array.isArray(proj.toolsUsed) && proj.toolsUsed.length > 0;
-      const hasImages = Array.isArray(proj.images) && proj.images.filter(Boolean).length > 0;
+    // Featured case studies with verified PDF screenshots/metrics
+    const featuredProjects = seoProjects.filter(p => (p.gallery && p.gallery.length > 0) || p.analyticsMetrics || p.pagespeed);
+    const otherSeoProjects = seoProjects.filter(p => !featuredProjects.includes(p));
 
-      const overviewHTML = hasOverview ? `
-        <div class="case-study-overview-card fade-up-element">
-          <h4 class="case-study-section-title" style="margin-bottom: 0.75rem;"><i data-lucide="file-text"></i> Project Overview</h4>
-          <p class="case-study-overview-text">${proj.overview}</p>
-          ${Array.isArray(proj.targetKeywords) && proj.targetKeywords.length > 0 ? `
-            <div class="keywords-highlight-row">
-              <span class="keywords-label">Target Keywords:</span>
-              ${proj.targetKeywords.map(kw => `<span class="keyword-chip">${kw}</span>`).join('')}
+    const seoServicesList = [
+      { icon: "settings", title: "Technical SEO", desc: "Crawlability, indexing fixes, mobile speed optimization & structured schema." },
+      { icon: "file-check-2", title: "On-Page SEO", desc: "Meta tags, heading hierarchy, internal linking & search-intent copy." },
+      { icon: "share-2", title: "Off-Page SEO", desc: "Authoritative backlink acquisition, niche outreach & brand mentions." },
+      { icon: "map-pin", title: "Local SEO", desc: "Business listings, NAP consistency & geo-targeted search visibility." },
+      { icon: "search", title: "Keyword Research", desc: "High-traffic & long-tail keyword discovery mapped to buyer intent." },
+      { icon: "bar-chart-2", title: "Competitor Analysis", desc: "SERP gap research, backlink benchmarking & ranking opportunities." },
+      { icon: "shield-check", title: "Website Audits", desc: "Full technical health checks, Core Web Vitals & PageSpeed diagnostics." },
+      { icon: "activity", title: "GSC & Analytics", desc: "Tracking impressions, clicks, CTR, engagement & conversion signals." }
+    ];
+
+    const evidenceItems = [
+      { src: "/assets/seo/foodcopycat-analytics.png", title: "Search Traffic & Impressions (+226.1%)", site: "FoodCopycat.com" },
+      { src: "/assets/seo/foodcopycat-pagespeed.png", title: "Mobile PageSpeed Audit (96/100)", site: "FoodCopycat.com" },
+      { src: "/assets/seo/66marketings-gsc.png", title: "Google Search Console (269 Clicks)", site: "66marketings.com" }
+    ];
+
+    const featuredHTML = featuredProjects.map((proj, idx) => {
+      const gallery = (proj.gallery && proj.gallery.length > 0)
+        ? proj.gallery
+        : (proj.images || []).filter(Boolean).map((src, i) => ({ src, label: `Screenshot ${i + 1}` }));
+      const firstImg = gallery[0] || null;
+      const niche = proj.niche || SEO_NICHE_MAP[proj.id] || "SEO Case Study";
+      const kpis = (proj.analyticsMetrics && proj.analyticsMetrics.kpis) ? proj.analyticsMetrics.kpis : [];
+      const pagespeedScores = (proj.pagespeed && proj.pagespeed.scores) ? proj.pagespeed.scores : [];
+      const highlights = (proj.results || []).slice(0, 4).map(r => r.replace(/^[^:]+:\s*/, ""));
+      const allTools = (proj.toolsUsed || []).flatMap(g => g.tools || []);
+
+      return `
+        <article id="project-${proj.id}" class="seo-featured-card fade-up-element" data-project-id="${proj.id}">
+          <div>
+            <div class="seo-featured-meta-row">
+              <span class="seo-niche-pill">${niche}</span>
+              ${proj.duration ? `<span class="seo-duration-pill"><i data-lucide="calendar" style="width:13px;height:13px;"></i> ${proj.duration}</span>` : ""}
+              ${proj.domainAge ? `<span class="seo-duration-pill"><i data-lucide="clock" style="width:13px;height:13px;"></i> ${proj.domainAge}</span>` : ""}
             </div>
-          ` : ''}
-        </div>
-      ` : '';
 
-      const objectivesHTML = Array.isArray(proj.objectives) && proj.objectives.length > 0 ? `
-        <div class="fade-up-element" style="margin-bottom: 3rem;">
-          <h4 class="case-study-section-title"><i data-lucide="target"></i> ${hasOverview ? 'Objectives & Goals' : 'Project Objectives'}</h4>
-          <div class="objectives-grid">
-            ${proj.objectives.map(obj => `
-              <div class="objective-card">
-                <div class="objective-icon-wrapper">
-                  <i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i>
-                </div>
-                <div class="objective-text">${obj}</div>
+            <div class="seo-featured-title-row">
+              <h3 class="seo-featured-title">${proj.name}</h3>
+              ${proj.website ? `
+                <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
+                  Visit Site <i data-lucide="external-link" style="width:15px;height:15px;"></i>
+                </a>
+              ` : ""}
+            </div>
+
+            <p class="seo-featured-summary">${proj.summary || proj.overview || ""}</p>
+
+            ${(kpis.length > 0 || pagespeedScores.length > 0) ? `
+              <div class="seo-mini-kpi-grid">
+                ${kpis.map(k => `
+                  <div class="seo-mini-kpi">
+                    <div class="seo-mini-kpi-val">${k.value}</div>
+                    <div class="seo-mini-kpi-lbl">${k.label}</div>
+                    ${k.change ? `<div class="seo-mini-kpi-delta">${k.change}</div>` : ""}
+                  </div>
+                `).join("")}
+                ${pagespeedScores.length > 0 ? `
+                  <div class="seo-mini-kpi">
+                    <div class="seo-mini-kpi-val" style="color:var(--color-success);">${pagespeedScores[0].score}/100</div>
+                    <div class="seo-mini-kpi-lbl">Mobile Performance</div>
+                    <div class="seo-mini-kpi-delta">${pagespeedScores[3] ? `${pagespeedScores[3].score}/100 SEO` : "Lighthouse Verified"}</div>
+                  </div>
+                ` : ""}
               </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : '';
+            ` : ""}
 
-      const contributionsHTML = hasContributions ? `
-        <div class="fade-up-element" style="margin-bottom: 3rem;">
-          <h4 class="case-study-section-title"><i data-lucide="wrench"></i> Our Contributions & SEO Strategies</h4>
-          <div class="contributions-grid">
-            ${proj.contributions.map(group => `
-              <div class="contribution-card">
-                <div>
-                  <h5 class="contribution-card-title">
-                    <i data-lucide="${group.title.toLowerCase().includes('off-page') ? 'share-2' : 'search'}"></i>
-                    ${group.title}
-                  </h5>
-                  ${group.intro ? `<p class="contribution-intro">${group.intro}</p>` : ''}
-                  <div class="contribution-items-list">
-                    ${(group.items || []).map(item => `
-                      <div class="contribution-item">
-                        <strong>${item.label}:</strong> ${item.detail}
+            <div class="seo-sublabel">SEO Services Performed</div>
+            <div class="seo-chips-wrap">
+              ${(proj.workCompleted || []).map(tag => `<span class="seo-service-chip">${tag}</span>`).join("")}
+            </div>
+
+            ${Array.isArray(proj.targetKeywords) && proj.targetKeywords.length > 0 ? `
+              <div class="seo-sublabel">Targeted Keywords</div>
+              <div class="seo-chips-wrap">
+                ${proj.targetKeywords.map(kw => `<span class="keyword-chip">${kw}</span>`).join("")}
+              </div>
+            ` : ""}
+
+            <div class="seo-sublabel">Key Achievements</div>
+            <div class="seo-highlights-list">
+              ${highlights.map(item => `
+                <div class="seo-highlight-item">
+                  <i data-lucide="check-circle-2"></i>
+                  <span>${item}</span>
+                </div>
+              `).join("")}
+            </div>
+
+            ${allTools.length > 0 ? `
+              <div class="seo-sublabel">Tools Used</div>
+              <div class="seo-chips-wrap" style="margin-bottom: 1rem;">
+                ${allTools.map(tool => `<span class="tool-badge">${tool}</span>`).join("")}
+              </div>
+            ` : ""}
+
+            <button type="button" class="seo-details-btn" data-open-case="${proj.id}">
+              <i data-lucide="file-text" style="width:15px;height:15px;"></i> View Full Strategy Breakdown
+            </button>
+          </div>
+
+          <div class="seo-featured-gallery">
+            ${firstImg ? `
+              <div class="seo-gallery-main">
+                <img src="${firstImg.src}" alt="${proj.name} — ${firstImg.label}" class="showcase-img" loading="${idx === 0 ? 'eager' : 'lazy'}" decoding="async">
+              </div>
+              ${gallery.length > 1 ? `
+                <div class="seo-gallery-thumbs">
+                  ${gallery.map((g, gIdx) => `
+                    <button type="button" class="seo-gallery-thumb ${gIdx === 0 ? 'active' : ''}" data-gallery-src="${g.src}" data-gallery-alt="${proj.name} — ${g.label}">
+                      <div class="seo-gallery-thumb-img">
+                        <img src="${g.src}" alt="${g.label}" loading="lazy" decoding="async">
                       </div>
-                    `).join('')}
-                  </div>
+                      <div class="seo-gallery-thumb-cap">${g.label}</div>
+                    </button>
+                  `).join("")}
                 </div>
-                ${group.result ? `
-                  <div class="contribution-result-callout">
-                    <strong>Result:</strong> ${group.result}
-                  </div>
-                ` : ''}
-              </div>
-            `).join('')}
+              ` : ""}
+            ` : ""}
           </div>
-        </div>
-      ` : '';
+        </article>
+      `;
+    }).join("");
 
-      const metricsCardsHTML = hasAnalytics ? `
-        <div class="metrics-dashboard-box">
-          <div class="metrics-source-label">
-            <i data-lucide="activity" style="width: 15px; height: 15px; color: var(--color-accent);"></i>
-            ${proj.analyticsMetrics.source || 'Verified Search Analytics'}
-          </div>
-          <div class="metrics-kpi-grid">
-            ${proj.analyticsMetrics.kpis.map(kpi => `
-              <div class="metric-kpi-card">
-                <div class="metric-kpi-label">${kpi.label}</div>
-                <div class="metric-kpi-value">${kpi.value}</div>
-                ${kpi.change ? `<span class="metric-kpi-change">${kpi.change}</span>` : ''}
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : '';
-
-      const pagespeedHTML = hasPagespeed ? `
-        <div class="metrics-dashboard-box">
-          <div class="metrics-source-label">
-            <i data-lucide="gauge" style="width: 15px; height: 15px; color: var(--color-success);"></i>
-            PageSpeed Insights (${proj.pagespeed.device || 'Mobile'})
-          </div>
-          <div class="pagespeed-grid">
-            ${proj.pagespeed.scores.map(item => `
-              <div class="pagespeed-card">
-                <div class="pagespeed-ring">${item.score}</div>
-                <span class="pagespeed-label">${item.label}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : '';
-
-      const screenshotsHTML = hasImages ? `
-        <div class="screenshots-container">
-          ${proj.images.filter(Boolean).map((imgSrc, imgIdx) => `
-            <div class="screenshot-showcase" data-project="${proj.name}">
-              <img src="${imgSrc}" alt="${proj.name} verified analytics screenshot ${imgIdx + 1}" class="showcase-img" loading="lazy" decoding="async">
-            </div>
-          `).join('')}
-        </div>
-      ` : (!hasAnalytics && !hasPagespeed ? `
-        <div class="screenshots-container">
-          <div class="screenshot-showcase" data-project="${proj.name}">
-            <div class="case-study-verified-badge">
-              <i data-lucide="trending-up" class="screenshot-placeholder-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem;"></i>
-              <div class="screenshot-placeholder-title">Search Visibility Chart</div>
-              <div class="screenshot-placeholder-sub">Audited & Verified Performance</div>
-            </div>
-          </div>
-          <div class="screenshot-showcase" data-project="${proj.name}">
-            <div class="case-study-verified-badge">
-              <i data-lucide="check-circle-2" class="screenshot-placeholder-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem;"></i>
-              <div class="screenshot-placeholder-title">On-Page / Audit Score Report</div>
-              <div class="screenshot-placeholder-sub">Technical Health Verified</div>
-            </div>
-          </div>
-        </div>
-      ` : '');
-
-      const toolsHTML = hasTools ? `
-        <div class="fade-up-element">
-          <h4 class="case-study-section-title"><i data-lucide="cpu"></i> Tools Used</h4>
-          <div class="tools-used-box">
-            ${proj.toolsUsed.map(group => `
-              <div>
-                <div class="tools-group-title">${group.group}</div>
-                <div class="tools-badge-list">
-                  ${(group.tools || []).map(tool => `<span class="tool-badge">${tool}</span>`).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : '';
+    const otherSeoHTML = otherSeoProjects.map(proj => {
+      const niche = proj.niche || SEO_NICHE_MAP[proj.id] || "SEO Campaign";
+      const outcomes = (proj.results || []).slice(0, 2);
 
       return `
-        <!-- Main Case Study Project Section -->
-        <section id="project-${proj.id}" class="section project-detail-section" style="border-bottom: 1px solid var(--color-border); padding: 90px 0;">
-          <div class="container">
-            
-            <!-- Project Header -->
-            <div class="project-detail-header fade-up-element" style="margin-bottom: 2.5rem;">
-              <span class="badge"><i data-lucide="briefcase"></i> Case Study #${String(index + 1).padStart(2, '0')}</span>
-              <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--color-navy);">${proj.name}</h2>
-              
-              <div class="case-study-meta-bar" style="margin-top: 1.5rem;">
-                ${proj.duration ? `
-                  <div class="case-study-meta-item">
-                    <i data-lucide="calendar"></i>
-                    <span>Duration: <strong>${proj.duration}</strong></span>
-                  </div>
-                ` : ''}
-                ${proj.domainAge ? `
-                  <div class="case-study-meta-item">
-                    <i data-lucide="clock"></i>
-                    <span>Domain Age: <strong>${proj.domainAge}</strong></span>
-                  </div>
-                ` : ''}
-                ${proj.website ? `
-                  <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
-                    Visit Live Site <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
-                  </a>
-                ` : ''}
-              </div>
-            </div>
-
-            ${overviewHTML}
-            ${objectivesHTML}
-            ${contributionsHTML}
-
-            ${Array.isArray(proj.workCompleted) && proj.workCompleted.length > 0 ? `
-              <!-- Work Completed Badges -->
-              <div class="work-completed-section fade-up-element">
-                <h4 class="case-study-section-title"><i data-lucide="layers"></i> Services Completed</h4>
-                <div class="work-completed-badges">
-                  ${proj.workCompleted.map(tag => `
-                    <span class="work-completed-badge">${tag}</span>
-                  `).join('')}
-                </div>
-              </div>
-            ` : ''}
-
-            <!-- Results, Verified Metrics & Screenshots -->
-            <div class="results-section fade-up-element">
+        <article id="project-${proj.id}" class="seo-client-card fade-up-element">
+          <div>
+            <div class="seo-client-card-head">
               <div>
-                <h4 class="case-study-section-title"><i data-lucide="bar-chart-3"></i> ${hasOverview ? 'Impact & Key Achievements' : 'Qualitative Improvements'}</h4>
-                <div class="results-list">
-                  ${(proj.results || []).map(res => `
-                    <div class="result-item">
-                      <i data-lucide="arrow-up-right" class="result-success-icon" style="width: 20px; height: 20px;"></i>
-                      <div class="result-text">${res}</div>
-                    </div>
-                  `).join('')}
+                <div class="seo-client-niche">${niche}</div>
+                <h3 class="seo-client-name">${proj.name}</h3>
+              </div>
+              ${proj.duration ? `<span class="seo-duration-pill">${proj.duration}</span>` : ""}
+            </div>
+
+            <div class="seo-chips-wrap" style="margin: 0.9rem 0 1rem;">
+              ${(proj.workCompleted || []).map(tag => `<span class="seo-service-chip">${tag}</span>`).join("")}
+            </div>
+
+            <div class="seo-highlights-list" style="margin-bottom: 0;">
+              ${outcomes.map(res => `
+                <div class="seo-highlight-item">
+                  <i data-lucide="arrow-up-right"></i>
+                  <span>${res}</span>
                 </div>
-                ${proj.impactSummary ? `<p class="impact-summary-note">${proj.impactSummary}</p>` : ''}
-              </div>
-              
-              <!-- Metrics Verification & Screenshots Display (Read-Only) -->
-              <div>
-                <h4 class="case-study-section-title"><i data-lucide="shield-check"></i> Project Metrics & Screenshots</h4>
-                ${metricsCardsHTML}
-                ${pagespeedHTML}
-                ${screenshotsHTML}
-              </div>
+              `).join("")}
             </div>
-
-            ${toolsHTML}
-
-            <hr class="case-study-divider">
-
-            <!-- Section Navigation (Prev/Next/Back) -->
-            <div class="project-navigation-controls fade-up-element">
-              ${prevProj ? `
-                <a href="#portfolio/seo#project-${prevProj.id}" class="project-nav-btn prev">
-                  <span class="project-nav-label">Previous Case Study</span>
-                  <span class="project-nav-link-btn"><i data-lucide="arrow-left"></i> ${prevProj.name}</span>
-                </a>
-              ` : `<div></div>`}
-
-              <a href="#portfolio/seo#seo-portfolio-top" class="back-to-portfolio-btn">
-                <i data-lucide="arrow-up"></i> Back to Top
-              </a>
-
-              ${nextProj ? `
-                <a href="#portfolio/seo#project-${nextProj.id}" class="project-nav-btn next">
-                  <span class="project-nav-label">Next Case Study</span>
-                  <span class="project-nav-link-btn">${nextProj.name} <i data-lucide="arrow-right"></i></span>
-                </a>
-              ` : `
-                <!-- link to freelance subsection when case studies finish -->
-                <a href="#portfolio/seo#freelance-section-header" class="project-nav-btn next">
-                  <span class="project-nav-label">Next Up</span>
-                  <span class="project-nav-link-btn">Freelancing Projects <i data-lucide="arrow-down"></i></span>
-                </a>
-              `}
-            </div>
-
           </div>
-        </section>
-      `;
-    }).join('');
 
-    const freelanceProjectsHTML = freelanceProjects.map((proj, index) => {
-      const nextProj = freelanceProjects[index + 1] || null;
-      const prevProj = freelanceProjects[index - 1] || null;
-      const lastSeo = seoProjects[seoProjects.length - 1];
-      
+          <div class="seo-client-foot">
+            <button type="button" class="seo-details-btn" data-open-case="${proj.id}">
+              Case Details <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+            </button>
+            ${proj.website ? `
+              <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="project-card-cta" style="font-size:0.84rem;">
+                Live Site <i data-lucide="external-link" style="width:14px;height:14px;"></i>
+              </a>
+            ` : ""}
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    const freelanceHTML = freelanceProjects.map(proj => {
+      const niche = proj.niche || SEO_NICHE_MAP[proj.id] || "Local SEO & Citations";
+      const outcomes = (proj.results || []).slice(0, 2);
+
       return `
-        <!-- Freelancing Project Section -->
-        <section id="project-${proj.id}" class="section project-detail-section freelance-section" style="border-bottom: 1px solid var(--color-border); padding: 90px 0;">
-          <div class="container">
-            
-            <!-- Project Header -->
-            <div class="project-detail-header fade-up-element" style="margin-bottom: 3rem;">
-              <span class="badge" style="background-color: var(--color-navy); color: var(--color-white); border-color: var(--color-navy);"><i data-lucide="globe"></i> Freelance Citation #${String(index + 1).padStart(2, '0')}</span>
-              <h2 style="font-size: clamp(1.8rem, 3.5vw, 2.5rem); font-weight: 800; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--color-navy);">${proj.name}</h2>
-              
-              <div class="case-study-meta-bar" style="margin-top: 1.25rem;">
-                <div class="case-study-meta-item" style="color: var(--color-navy-light)">
-                  <i data-lucide="calendar"></i>
-                  <span>Duration: <strong>${proj.duration}</strong></span>
-                </div>
-                ${proj.website ? `
-                  <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="case-study-url-btn">
-                    Visit Live Site <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
-                  </a>
-                ` : ''}
-              </div>
-            </div>
-
-            <!-- Objectives Grid -->
-            <div class="fade-up-element" style="margin-bottom: 2.5rem;">
-              <h4 class="case-study-section-title"><i data-lucide="target"></i> Project Objectives</h4>
-              <div class="objectives-grid">
-                ${(proj.objectives || []).map(obj => `
-                  <div class="objective-card" style="border-left: 3px solid var(--color-orange)">
-                    <div class="objective-icon-wrapper">
-                      <i data-lucide="check-circle-2" style="width: 20px; height: 20px;"></i>
-                    </div>
-                    <div class="objective-text">${obj}</div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Work Completed Badges -->
-            <div class="work-completed-section fade-up-element">
-              <h4 class="case-study-section-title"><i data-lucide="layers"></i> Services Completed</h4>
-              <div class="work-completed-badges">
-                ${(proj.workCompleted || []).map(tag => `
-                  <span class="work-completed-badge" style="background-color: var(--color-orange);">${tag}</span>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Results & Citation Verification -->
-            <div class="results-section fade-up-element" style="margin-top: 3rem;">
+        <article id="project-${proj.id}" class="seo-client-card fade-up-element">
+          <div>
+            <div class="seo-client-card-head">
               <div>
-                <h4 class="case-study-section-title"><i data-lucide="bar-chart-3"></i> Qualitative Improvements</h4>
-                <div class="results-list">
-                  ${(proj.results || []).map(res => `
-                    <div class="result-item">
-                      <i data-lucide="arrow-up-right" class="result-success-icon" style="width: 20px; height: 20px;"></i>
-                      <div class="result-text">${res}</div>
-                    </div>
-                  `).join('')}
-                </div>
+                <div class="seo-client-niche">${niche}</div>
+                <h3 class="seo-client-name">${proj.name}</h3>
               </div>
-              
-              <!-- Citation Verification Display (Read-Only) -->
-              <div>
-                <h4 class="case-study-section-title"><i data-lucide="shield-check"></i> Citation Verification</h4>
-                <div class="screenshots-container">
-                  <div class="screenshot-showcase" data-project="${proj.name}">
-                    <div class="case-study-verified-badge">
-                      <i data-lucide="map-pin" class="screenshot-placeholder-icon" style="color: var(--color-accent); width: 36px; height: 36px; margin-bottom: 0.75rem;"></i>
-                      <div class="screenshot-placeholder-title">Listing Citation Record</div>
-                      <div class="screenshot-placeholder-sub">Directory Placement Verified</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              ${proj.duration ? `<span class="seo-duration-pill">${proj.duration}</span>` : ""}
             </div>
 
-            <hr class="case-study-divider">
-
-            <!-- Section Navigation (Prev/Next/Back) -->
-            <div class="project-navigation-controls fade-up-element">
-              ${prevProj ? `
-                <a href="#portfolio/seo#project-${prevProj.id}" class="project-nav-btn prev">
-                  <span class="project-nav-label">Previous Citation</span>
-                  <span class="project-nav-link-btn"><i data-lucide="arrow-left"></i> ${prevProj.name}</span>
-                </a>
-              ` : (lastSeo ? `
-                <a href="#portfolio/seo#project-${lastSeo.id}" class="project-nav-btn prev">
-                  <span class="project-nav-label">Previous Case Study</span>
-                  <span class="project-nav-link-btn"><i data-lucide="arrow-left"></i> ${lastSeo.name}</span>
-                </a>
-              ` : `<div></div>`)}
-
-              <a href="#portfolio/seo#seo-portfolio-top" class="back-to-portfolio-btn">
-                <i data-lucide="arrow-up"></i> Back to Top
-              </a>
-
-              ${nextProj ? `
-                <a href="#portfolio/seo#project-${nextProj.id}" class="project-nav-btn next">
-                  <span class="project-nav-label">Next Citation</span>
-                  <span class="project-nav-link-btn">${nextProj.name} <i data-lucide="arrow-right"></i></span>
-                </a>
-              ` : `
-                <a href="#contact" class="project-nav-btn next">
-                  <span class="project-nav-label">Finish Portfolio</span>
-                  <span class="project-nav-link-btn">Contact Me <i data-lucide="message-square"></i></span>
-                </a>
-              `}
+            <div class="seo-chips-wrap" style="margin: 0.9rem 0 1rem;">
+              ${(proj.workCompleted || []).map(tag => `<span class="seo-service-chip">${tag}</span>`).join("")}
             </div>
 
+            <div class="seo-highlights-list" style="margin-bottom: 0;">
+              ${outcomes.map(res => `
+                <div class="seo-highlight-item">
+                  <i data-lucide="map-pin"></i>
+                  <span>${res}</span>
+                </div>
+              `).join("")}
+            </div>
           </div>
-        </section>
+
+          <div class="seo-client-foot">
+            <button type="button" class="seo-details-btn" data-open-case="${proj.id}" data-case-type="freelance">
+              Citation Details <i data-lucide="chevron-right" style="width:14px;height:14px;"></i>
+            </button>
+            ${proj.website ? `
+              <a href="${proj.website}" target="_blank" rel="noopener noreferrer" class="project-card-cta" style="font-size:0.84rem;">
+                Live Site <i data-lucide="external-link" style="width:14px;height:14px;"></i>
+              </a>
+            ` : ""}
+          </div>
+        </article>
       `;
-    }).join('');
+    }).join("");
 
     appContent.innerHTML = `
-      <!-- SEO Portfolio Header & Quick Navigation -->
-      <section id="seo-portfolio-top" class="portfolio-header bg-grid-pattern" style="padding-top: 140px; padding-bottom: 60px; border-bottom: 1px solid var(--color-border);">
+      <!-- 1. Clean Agency SEO Hero -->
+      <section id="seo-portfolio-top" class="seo-agency-hero bg-grid-pattern">
         <div class="container fade-up-element">
-          <span class="badge"><i data-lucide="trending-up"></i> SEO Case Studies</span>
-          <h1 style="margin-top: 1rem;">SEO Portfolio & Results</h1>
-          <p class="portfolio-header-p">Data-driven On-Page, Technical, and Off-Page SEO campaigns focused on organic traffic growth, search visibility, and keyword rankings.</p>
-          <div class="seo-quick-jump-bar">
-            ${seoProjects.map((p, i) => `
-              <a href="#portfolio/seo#project-${p.id}" class="seo-jump-pill ${i < 2 ? 'featured' : ''}">
-                #${String(i + 1).padStart(2, '0')} ${p.name}
-              </a>
-            `).join('')}
-            ${freelanceProjects.length > 0 ? `
-              <a href="#portfolio/seo#freelance-section-header" class="seo-jump-pill">
-                Freelancing & Citations (${freelanceProjects.length})
-              </a>
-            ` : ''}
+          <span class="badge"><i data-lucide="trending-up"></i> SEO Specialist Portfolio</span>
+          <h1>Measurable <span>SEO Growth</span> Backed by Real Data</h1>
+          <p class="seo-agency-subtitle">On-Page, Technical, Local & Off-Page SEO strategies — verified with Google Search Console, Analytics, and PageSpeed Audits.</p>
+          <div class="seo-hero-actions">
+            <a href="#portfolio/seo#seo-results" class="seo-jump-pill featured">Results & Evidence</a>
+            <a href="#portfolio/seo#seo-featured" class="seo-jump-pill featured">Featured Case Studies</a>
+            <a href="#portfolio/seo#seo-services" class="seo-jump-pill">SEO Services (8)</a>
+            <a href="#portfolio/seo#seo-all-projects" class="seo-jump-pill">More Projects (${otherSeoProjects.length})</a>
+            <a href="#portfolio/seo#freelance-section-header" class="seo-jump-pill">Local Citations (${freelanceProjects.length})</a>
           </div>
         </div>
       </section>
 
-      <!-- Scrollable Projects Body -->
-      <div id="seo-portfolio-document-body" class="bg-grid-pattern">
-        
-        <!-- Case Studies List -->
-        ${seoProjectsHTML}
+      <!-- 2. Results & Visual Proof Section (Actual PDF Numbers Only) -->
+      <section id="seo-results" class="seo-section-block" style="background-color: var(--color-bg-primary);">
+        <div class="container">
+          <div class="seo-section-heading fade-up-element">
+            <div>
+              <span class="badge"><i data-lucide="bar-chart-3"></i> Verified Results</span>
+              <h2 style="margin-top: 0.75rem;">Results & Performance Highlights</h2>
+              <p>Actual performance metrics from Google Search Console, Google Analytics, and PageSpeed Insights.</p>
+            </div>
+          </div>
 
-        <!-- Subsection Header for Freelance projects -->
-        <div id="freelance-section-header" style="background-color: var(--color-bg-secondary); border-bottom: 1px solid var(--color-border); padding: 80px 0; text-align: center;">
-          <div class="container fade-up-element">
-            <span class="badge">Additional Records</span>
-            <h2 style="margin-top: 1rem; margin-bottom: 0.5rem;">Freelancing Projects</h2>
-            <p style="color: var(--color-text-secondary); max-width: 600px; margin: 0 auto;">Review local business listing acquisitions, citation audits, and social backlink directories completed as external digital marketing contracts.</p>
+          <div class="seo-results-kpi-row fade-up-element">
+            <div class="seo-big-kpi-card">
+              <div class="seo-big-kpi-top">
+                <span class="seo-big-kpi-source">FoodCopycat.com</span>
+                <span class="seo-big-kpi-trend">↑ 226.1%</span>
+              </div>
+              <div class="seo-big-kpi-number">17K</div>
+              <div class="seo-big-kpi-label">Total Search Impressions</div>
+              <div class="seo-big-kpi-sub">128 Search Visitors (↑106.5%) • 78 Clicks (↑143.8%)</div>
+            </div>
+
+            <div class="seo-big-kpi-card">
+              <div class="seo-big-kpi-top">
+                <span class="seo-big-kpi-source">FoodCopycat.com</span>
+                <span class="seo-big-kpi-trend">Mobile Audit</span>
+              </div>
+              <div class="seo-big-kpi-number">96/100</div>
+              <div class="seo-big-kpi-label">PageSpeed Performance</div>
+              <div class="seo-big-kpi-sub">92 SEO • 91 Accessibility • 96 Best Practices</div>
+            </div>
+
+            <div class="seo-big-kpi-card">
+              <div class="seo-big-kpi-top">
+                <span class="seo-big-kpi-source">66marketings.com</span>
+                <span class="seo-big-kpi-trend">GSC May 2024</span>
+              </div>
+              <div class="seo-big-kpi-number">7.92K</div>
+              <div class="seo-big-kpi-label">Search Impressions</div>
+              <div class="seo-big-kpi-sub">269 Total Clicks • 3.4% Avg CTR • 14.3 Avg Position</div>
+            </div>
+
+            <div class="seo-big-kpi-card">
+              <div class="seo-big-kpi-top">
+                <span class="seo-big-kpi-source">Portfolio Scope</span>
+                <span class="seo-big-kpi-trend">Multi-Niche</span>
+              </div>
+              <div class="seo-big-kpi-number">${seoProjects.length + freelanceProjects.length}</div>
+              <div class="seo-big-kpi-label">Completed SEO Projects</div>
+              <div class="seo-big-kpi-sub">${seoProjects.length} SEO Campaigns • ${freelanceProjects.length} Local Citations</div>
+            </div>
+          </div>
+
+          <div class="seo-evidence-grid fade-up-element">
+            ${evidenceItems.map(ev => `
+              <div class="seo-evidence-card">
+                <div class="seo-evidence-frame">
+                  <img src="${ev.src}" alt="${ev.site} — ${ev.title}" class="showcase-img" loading="lazy" decoding="async">
+                </div>
+                <div class="seo-evidence-caption">
+                  <span class="seo-evidence-title">${ev.title}</span>
+                  <span class="seo-evidence-site">${ev.site}</span>
+                </div>
+              </div>
+            `).join("")}
           </div>
         </div>
+      </section>
 
-        <!-- Freelance List -->
-        ${freelanceProjectsHTML}
-      </div>
+      <!-- 3. Featured Visual Case Studies (PDF Showcase) -->
+      <section id="seo-featured" class="seo-section-block bg-grid-pattern">
+        <div class="container">
+          <div class="seo-section-heading fade-up-element">
+            <div>
+              <span class="badge"><i data-lucide="award"></i> Visual Case Studies</span>
+              <h2 style="margin-top: 0.75rem;">Featured SEO Case Studies</h2>
+              <p>Click any screenshot or gallery thumbnail to inspect live sites, analytics charts, and technical audit scores.</p>
+            </div>
+          </div>
 
-      <!-- Floating Jump-to Project Menu Widget -->
-      <div id="floating-case-navigator" class="floating-case-nav">
-        <button class="float-nav-btn" id="float-nav-prev-btn" title="Previous Project"><i data-lucide="chevron-up"></i></button>
-        <button class="float-nav-btn" id="float-nav-list-btn" title="Jump to Index"><i data-lucide="list"></i></button>
-        <button class="float-nav-btn" id="float-nav-next-btn" title="Next Project"><i data-lucide="chevron-down"></i></button>
-      </div>
+          <div class="seo-featured-stack">
+            ${featuredHTML}
+          </div>
+        </div>
+      </section>
 
-      <!-- Floating Index Dropdown Overlay -->
-      <div id="floating-index-overlay" style="display: none; position: fixed; bottom: 6.5rem; right: 2rem; background-color: var(--color-white); border: 1px solid var(--color-border); padding: 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 910; width: 280px; max-height: 380px; overflow-y: auto;">
-        <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--color-orange); border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">Portfolio Contents</h4>
-        <ul style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem;">
-          ${seoProjects.map((p, i) => `
-            <li><a href="#portfolio/seo#project-${p.id}" style="font-weight:600; display:block; padding: 0.25rem 0;" class="index-jump-link">Case #${i+1}: ${p.name}</a></li>
-          `).join('')}
-          <li style="border-top: 1px solid var(--color-border); padding-top: 0.5rem; margin-top: 0.5rem; font-weight: 700; color: var(--color-navy);">Freelance Projects</li>
-          ${freelanceProjects.map((p, i) => `
-            <li><a href="#portfolio/seo#project-${p.id}" style="font-weight:600; display:block; padding: 0.25rem 0;" class="index-jump-link">Citations: ${p.name}</a></li>
-          `).join('')}
-        </ul>
-      </div>
+      <!-- 4. SEO Services Grid (8 Core Services) -->
+      <section id="seo-services" class="seo-section-block" style="background-color: var(--color-bg-primary);">
+        <div class="container">
+          <div class="seo-section-heading fade-up-element">
+            <div>
+              <span class="badge"><i data-lucide="layers"></i> Capabilities</span>
+              <h2 style="margin-top: 0.75rem;">Core SEO Services</h2>
+              <p>Comprehensive search optimization across technical foundations, content, and authority building.</p>
+            </div>
+          </div>
+
+          <div class="seo-services-grid-8 fade-up-element">
+            ${seoServicesList.map(svc => `
+              <div class="seo-skill-card">
+                <div class="seo-skill-icon">
+                  <i data-lucide="${svc.icon}" style="width:22px;height:22px;"></i>
+                </div>
+                <h3 class="seo-skill-title">${svc.title}</h3>
+                <p class="seo-skill-desc">${svc.desc}</p>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Additional SEO Client Projects -->
+      ${otherSeoProjects.length > 0 ? `
+        <section id="seo-all-projects" class="seo-section-block bg-grid-pattern">
+          <div class="container">
+            <div class="seo-section-heading fade-up-element">
+              <div>
+                <span class="badge"><i data-lucide="briefcase"></i> Client Portfolio</span>
+                <h2 style="margin-top: 0.75rem;">More SEO Projects</h2>
+                <p>Additional multi-market SEO campaigns across SaaS, automotive, e-commerce, and publishing.</p>
+              </div>
+            </div>
+            <div class="seo-clients-grid">
+              ${otherSeoHTML}
+            </div>
+          </div>
+        </section>
+      ` : ""}
+
+      <!-- 6. Freelancing & Local Citation Projects -->
+      ${freelanceProjects.length > 0 ? `
+        <section id="freelance-section-header" class="seo-section-block" style="background-color: var(--color-bg-primary);">
+          <div class="container">
+            <div class="seo-section-heading fade-up-element">
+              <div>
+                <span class="badge"><i data-lucide="map-pin"></i> Local SEO & Citations</span>
+                <h2 style="margin-top: 0.75rem;">Freelancing & Citation Projects</h2>
+                <p>Niche-relevant business directories, NAP alignment, and social profile backlink campaigns.</p>
+              </div>
+            </div>
+            <div class="seo-clients-grid">
+              ${freelanceHTML}
+            </div>
+          </div>
+        </section>
+      ` : ""}
 
       ${renderContactSectionMarkup()}
     `;
 
     afterRenderSetup();
-    setupFloatingNavigator();
     setupImageLightbox();
+    setupSeoGalleryAndModals();
+  }
+
+  function setupSeoGalleryAndModals() {
+    // Interactive gallery thumbnail switching inside featured cards
+    document.querySelectorAll(".seo-featured-card").forEach(card => {
+      const mainImg = card.querySelector(".seo-gallery-main img");
+      const thumbs = card.querySelectorAll(".seo-gallery-thumb");
+      if (!mainImg || thumbs.length === 0) return;
+
+      thumbs.forEach(btn => {
+        btn.addEventListener("click", () => {
+          thumbs.forEach(t => t.classList.remove("active"));
+          btn.classList.add("active");
+          mainImg.src = btn.getAttribute("data-gallery-src");
+          mainImg.alt = btn.getAttribute("data-gallery-alt") || mainImg.alt;
+        });
+      });
+    });
+
+    // Case study details modal
+    document.querySelectorAll("[data-open-case]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-open-case");
+        const type = btn.getAttribute("data-case-type");
+        const pool = type === "freelance"
+          ? (window.portfolioData.freelanceProjects || [])
+          : (window.portfolioData.seoProjects || []);
+        const proj = pool.find(p => p.id === id);
+        if (proj) openSeoCaseModal(proj);
+      });
+    });
+  }
+
+  function openSeoCaseModal(proj) {
+    const niche = proj.niche || SEO_NICHE_MAP[proj.id] || "SEO Case Study";
+    const overlay = document.createElement("div");
+    overlay.className = "seo-case-modal-overlay";
+    overlay.innerHTML = `
+      <div class="seo-case-modal-box">
+        <button class="seo-case-modal-close" aria-label="Close case details"><i data-lucide="x"></i></button>
+        <div class="seo-featured-meta-row">
+          <span class="seo-niche-pill">${niche}</span>
+          ${proj.duration ? `<span class="seo-duration-pill">${proj.duration}</span>` : ""}
+        </div>
+        <h3 style="font-size:1.75rem;font-weight:800;margin-bottom:0.75rem;">${proj.name}</h3>
+        ${proj.overview ? `<p style="color:var(--color-text-secondary);margin-bottom:1.5rem;line-height:1.6;">${proj.overview}</p>` : ""}
+
+        ${Array.isArray(proj.objectives) && proj.objectives.length > 0 ? `
+          <div class="seo-sublabel">Objectives & Goals</div>
+          <div class="seo-highlights-list" style="margin-bottom:1.5rem;">
+            ${proj.objectives.map(o => `<div class="seo-highlight-item"><i data-lucide="target"></i><span>${o}</span></div>`).join("")}
+          </div>
+        ` : ""}
+
+        ${Array.isArray(proj.contributions) && proj.contributions.length > 0 ? `
+          <div class="seo-sublabel">Strategy Breakdown</div>
+          <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
+            ${proj.contributions.map(c => `
+              <div style="background:var(--color-bg-primary);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:1rem;">
+                <div style="font-weight:700;color:var(--color-accent);margin-bottom:0.5rem;">${c.title}</div>
+                <div class="contribution-items-list">
+                  ${(c.items || []).map(it => `<div class="contribution-item"><strong>${it.label}:</strong> ${it.detail}</div>`).join("")}
+                </div>
+                ${c.result ? `<div class="contribution-result-callout" style="margin-top:0.75rem;"><strong>Result:</strong> ${c.result}</div>` : ""}
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+
+        ${Array.isArray(proj.results) && proj.results.length > 0 ? `
+          <div class="seo-sublabel">Results & Impact</div>
+          <div class="seo-highlights-list">
+            ${proj.results.map(r => `<div class="seo-highlight-item"><i data-lucide="check-circle-2"></i><span>${r}</span></div>`).join("")}
+          </div>
+        ` : ""}
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = "hidden";
+    if (typeof lucide !== "undefined") lucide.createIcons({ node: overlay });
+
+    const close = () => {
+      overlay.remove();
+      document.body.style.overflow = "";
+    };
+    overlay.querySelector(".seo-case-modal-close").addEventListener("click", close);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
   }
 
   /* ==========================================================================

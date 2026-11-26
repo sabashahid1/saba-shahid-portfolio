@@ -93,6 +93,7 @@ function requireAuth(req, res, next) {
 // --------------------------------------------------------------------------
 app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: "1h", etag: true }));
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: "1h", etag: true }));
+app.use("/assets", express.static(path.join(__dirname, "assets"), { maxAge: "7d", etag: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { maxAge: "1d", etag: true }));
 
 app.get("/favicon.ico", (req, res) => res.status(204).end());

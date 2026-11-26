@@ -319,14 +319,16 @@ function enrichSeoProjects(projects) {
     const merged = { ...seed, ...proj };
     const isLegacyBlank = !proj.website && (!proj.objectives || proj.objectives.length === 0);
 
-    if (isLegacyBlank || !proj.overview) {
+    if (isLegacyBlank || !proj.niche || !proj.gallery) {
       merged.name = seed.name;
+      merged.niche = proj.niche || seed.niche;
       merged.website = proj.website || seed.website;
       merged.duration = (!proj.duration || proj.duration === "3 Months" || proj.duration === "4 Months") && seed.overview ? seed.duration : (proj.duration || seed.duration);
       merged.workCompleted = (proj.workCompleted && proj.workCompleted.length > 0 && proj.overview) ? proj.workCompleted : seed.workCompleted;
       merged.objectives = (proj.objectives && proj.objectives.length > 0 && proj.overview) ? proj.objectives : seed.objectives;
       merged.results = (proj.results && proj.results.length > 0 && proj.overview) ? proj.results : seed.results;
       merged.overview = proj.overview || seed.overview;
+      merged.summary = proj.summary || seed.summary;
       merged.domainAge = proj.domainAge || seed.domainAge;
       merged.targetKeywords = proj.targetKeywords || seed.targetKeywords;
       merged.contributions = proj.contributions || seed.contributions;
@@ -334,10 +336,12 @@ function enrichSeoProjects(projects) {
       merged.analyticsMetrics = proj.analyticsMetrics || seed.analyticsMetrics;
       merged.pagespeed = proj.pagespeed || seed.pagespeed;
       merged.toolsUsed = proj.toolsUsed || seed.toolsUsed;
+      merged.gallery = proj.gallery || seed.gallery;
     }
 
-    // Preserve admin-uploaded screenshots if present; otherwise fall back to seed images
-    merged.images = (proj.images && proj.images.length > 0) ? proj.images : (seed.images || []);
+    // Upgrade legacy local upload path (gitignored on Vercel) or empty images to tracked assets; preserve any Vercel Blob uploads
+    const hasCustomHttpImages = Array.isArray(proj.images) && proj.images.some(img => typeof img === "string" && img.startsWith("http"));
+    merged.images = hasCustomHttpImages ? proj.images : (seed.images && seed.images.length > 0 ? seed.images : (proj.images || []));
     return merged;
   });
 }
